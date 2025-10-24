@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../providers/AuthProvider';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
 
 export function RegisterPage() {
   const [name, setName] = useState('');
@@ -13,7 +13,7 @@ export function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { register, loginWithGoogle } = useAuth();
+  const { register } = useAuthStore();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -47,7 +47,7 @@ export function RegisterPage() {
     setIsLoading(true);
 
     try {
-      await loginWithGoogle();
+      // await loginWithGoogle();
       navigate('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to register with Google');

@@ -1,73 +1,42 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
-import type { AuthContextType, User } from '../types';
-import { authAPI } from '../api/auth';
+'use client'
+import React, { useEffect } from "react"
+import { useAuthStore } from "@/stores/authStore"
+import { useNavigate } from "react-router-dom"
+import { Preloader } from "@/components/Preloader"
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const { login } = useAuthStore()
+  const [isLoading, setIsLoading] = React.useState(true)
+  const navigate = useNavigate()
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const handleLogin = async () => {
+    try {
+      await login()
+    } catch (error) {
+      console.error("Auto-login failed:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   useEffect(() => {
-    // Check if user is already logged in
-    const currentUser = authAPI.getCurrentUser();
-    setUser(currentUser);
-    setIsLoading(false);
-  }, []);
+    handleLogin()
+  }, [navigate])
 
-  const login = async (email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      const user = await authAPI.login(email, password);
-      setUser(user);
-    } catch (error) {
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  const register = async (name: string, email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      const user = await authAPI.register(name, email, password);
-      setUser(user);
-    } catch (error) {
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loginWithGoogle = async () => {
-    setIsLoading(true);
-    try {
-      const user = await authAPI.loginWithGoogle();
-      setUser(user);
-    } catch (error) {
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const logout = () => {
-    authAPI.logout();
-    setUser(null);
-  };
-
-  return (
-    <AuthContext.Provider value={{ user, login, register, loginWithGoogle, logout, isLoading }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  if (isLoading) return <Preloader />
+  return <>
+    {children}
+  </>
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+export const useAuth = () => {
+  const { ...auth } = useAuthStore()
+  if (!auth.user) throw new Error("No authenticated user found")
+  return {
+    ...auth,
+    user: auth.user
   }
-  return context;
 }
+
+export default AuthProvider

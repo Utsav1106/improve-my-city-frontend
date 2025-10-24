@@ -10,9 +10,7 @@ const getSystemTheme = (): Theme => {
 const applyThemeToDocument = (theme: Theme) => {
   if (typeof document === 'undefined') return;
   const root = document.documentElement;
-  // Keep data-theme for potential CSS hooks
   root.setAttribute('data-theme', theme);
-  // Tailwind dark mode via class
   if (theme === 'dark') {
     root.classList.add('dark');
   } else {

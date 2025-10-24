@@ -10,14 +10,6 @@ export type IssueCategory =
   | 'Parks'
   | 'Other';
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-  isAdmin: boolean;
-  createdAt: string;
-}
 
 export interface Issue {
   id: string;
@@ -60,15 +52,6 @@ export interface Notification {
   message: string;
   read: boolean;
   createdAt: string;
-}
-
-export interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
-  logout: () => void;
-  isLoading: boolean;
 }
 
 export interface IssueFilters {

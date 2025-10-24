@@ -155,7 +155,6 @@ export function Navigation() {
                     <div className="relative">
                       <img
                         src={
-                          user.avatar ||
                           `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name || 'user')}`
                         }
                         alt={user.name || 'User avatar'}
@@ -220,7 +219,6 @@ export function Navigation() {
                 <div className="flex items-center gap-3">
                   <img
                     src={
-                      user.avatar ||
                       `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name || 'user')}`
                     }
                     alt={user.name || 'User avatar'}
