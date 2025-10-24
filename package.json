@@ -28,6 +28,18 @@
     "globals": "^16.4.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.45.0",
-    "vite": "^7.1.7"
-  }
+    "vite": "^7.1.12"
+  },
+  "description": "A modern, comprehensive web application that allows citizens to report, track, and view resolutions of civic issues in their neighborhood. Built with React, TypeScript, and Tailwind CSS.",
+  "main": "eslint.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Utsav1106/improve-my-city-frontend.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Utsav1106/improve-my-city-frontend/issues"
+  },
+  "homepage": "https://github.com/Utsav1106/improve-my-city-frontend#readme"
 }

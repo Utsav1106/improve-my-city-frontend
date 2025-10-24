@@ -69,6 +69,7 @@ export function LoginPage() {
             </div>
 
             <Input
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               label="Email"
               type="email"
               value={email}
@@ -78,6 +79,7 @@ export function LoginPage() {
             />
 
             <Input
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               label="Password"
               type="password"
               value={password}
