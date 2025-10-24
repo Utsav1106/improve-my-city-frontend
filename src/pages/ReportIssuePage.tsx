@@ -28,6 +28,35 @@ const categories: IssueCategory[] = [
   "Other",
 ];
 
+// Reverse geocode using OpenStreetMap Nominatim API
+async function getHumanReadableLocation(lat: number, lng: number): Promise<string> {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+    );
+    const data = await response.json();
+    return data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  } catch (error) {
+    console.error("Error fetching address:", error);
+    return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  }
+}
+
+// Fetch location suggestions from OpenStreetMap Nominatim API
+async function fetchLocationSuggestions(query: string): Promise<any[]> {
+  if (!query || query.length < 3) return [];
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5`
+    );
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching suggestions:", error);
+    return [];
+  }
+}
+
 export function ReportIssuePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -43,6 +72,9 @@ export function ReportIssuePage() {
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [gpsDisabled, setGpsDisabled] = useState(false);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
 
   const handleChange = (field: string, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -119,24 +151,66 @@ export function ReportIssuePage() {
   };
 
   const useCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setFormData((prev) => ({
-            ...prev,
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            address: `${position.coords.latitude.toFixed(
-              4
-            )}, ${position.coords.longitude.toFixed(4)}`,
-          }));
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          alert("Could not get your location. Please enter it manually.");
-        }
-      );
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
     }
+
+    setGpsDisabled(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const address = await getHumanReadableLocation(lat, lng);
+        
+        setFormData((prev) => ({
+          ...prev,
+          latitude: lat,
+          longitude: lng,
+          address: address,
+        }));
+        setSuggestions([]);
+        
+        // Re-enable GPS button after 2 seconds
+        setTimeout(() => setGpsDisabled(false), 2000);
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        alert("Could not get your location. Please enter it manually.");
+        setGpsDisabled(false);
+      }
+    );
+  };
+
+  // Handle location input with debounce-like behavior
+  const handleLocationInput = async (val: string) => {
+    handleChange("address", val);
+    
+    if (val.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+
+    setIsLoadingSuggestions(true);
+    try {
+      const results = await fetchLocationSuggestions(val);
+      setSuggestions(results);
+    } catch (error) {
+      console.error("Error fetching suggestions:", error);
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  };
+
+  const selectSuggestion = (place: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      address: place.display_name,
+      latitude: parseFloat(place.lat),
+      longitude: parseFloat(place.lon),
+    }));
+    setSuggestions([]);
   };
 
   return (
@@ -237,23 +311,54 @@ export function ReportIssuePage() {
             {/* Location */}
             <div className="space-y-2">
               <Label className="text-base font-semibold">Location</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={formData.address}
-                  onChange={(e) => handleChange("address", e.target.value)}
-                  placeholder="Enter address or location"
-                  required
-                  className="flex-1 h-12 text-base"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={useCurrentLocation}
-                  className="h-12 px-4"
-                >
-                  <MapPin className="w-5 h-5 mr-2" />
-                  Use GPS
-                </Button>
+              <div className="relative">
+                <div className="flex gap-2">
+                  <Input
+                    value={formData.address}
+                    onChange={(e) => handleLocationInput(e.target.value)}
+                    placeholder="Enter address or location"
+                    required
+                    className="flex-1 h-12 text-base"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={useCurrentLocation}
+                    disabled={gpsDisabled}
+                    className="h-12 px-4"
+                  >
+                    <MapPin className="w-5 h-5 mr-2" />
+                    {gpsDisabled ? "Loading..." : "Use GPS"}
+                  </Button>
+                </div>
+
+                {/* Location Suggestions Dropdown */}
+                {suggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto z-50">
+                    {suggestions.map((place, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        className="w-full px-4 py-3 text-left hover:bg-muted/50 transition-colors border-b border-border/50 last:border-b-0 text-sm"
+                        onClick={() => selectSuggestion(place)}
+                      >
+                        <div className="flex items-start gap-2">
+                          <MapPin className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+                          <span className="line-clamp-2">{place.display_name}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {isLoadingSuggestions && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg p-4 z-50">
+                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Searching locations...
+                    </div>
+                  </div>
+                )}
               </div>
               <p className="text-sm text-muted-foreground flex items-center gap-2">
                 <MapPin className="w-4 h-4" />

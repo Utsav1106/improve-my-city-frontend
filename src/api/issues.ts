@@ -66,6 +66,19 @@ class IssuesAPI {
     return newIssue;
   }
 
+  async uploadPhoto(file: File): Promise<string> {
+    await delay(500);
+    
+    // In a real app, this would upload to a cloud storage service
+    // For now, we'll convert to base64 data URL
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
   async updateIssueStatus(issueId: string, status: IssueStatus): Promise<Issue> {
     await delay(500);
 

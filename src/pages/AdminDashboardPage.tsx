@@ -155,9 +155,9 @@ export function AdminDashboardPage() {
     <div className="min-h-screen bg-linear-to-br from-background via-background to-muted/10">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-12 py-8 sm:py-12">
         {/* Admin Header */}
-        <div className="relative overflow-hidden rounded-3xl p-8 sm:p-10 lg:p-12 mb-8 shadow-2xl bg-linear-to-br from-purple-600 via-purple-500 to-indigo-600 text-white">
+        <div className="relative overflow-hidden rounded-3xl p-8 sm:p-10 lg:p-12 mb-8 shadow-2xl bg-linear-to-br from-primary via-primary to-primary/80 text-primary-foreground">
           <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-4 rounded-full bg-white/20 backdrop-blur-sm border border-white/30">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-4 rounded-full bg-primary-foreground/20 backdrop-blur-sm border border-primary-foreground/30">
               <Shield className="w-4 h-4" />
               <span className="text-sm font-medium">Administrator</span>
             </div>
@@ -168,65 +168,67 @@ export function AdminDashboardPage() {
               Manage and resolve civic issues reported by citizens. Keep track of all reports and maintain community trust.
             </p>
           </div>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full blur-3xl"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary-foreground/5 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary-foreground/5 rounded-full blur-3xl"></div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-          <Card className="p-4">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center">
+        {/* Compact Stats Strip */}
+        <div className="bg-card/30 backdrop-blur-sm rounded-2xl p-4 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="flex items-center gap-3 group">
+              <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                 <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground leading-none mb-1">{stats.total}</p>
+                <p className="text-xs text-muted-foreground font-medium">Total</p>
+              </div>
             </div>
-            <p className="text-2xl font-bold mb-1">{stats.total}</p>
-            <p className="text-xs font-medium text-muted-foreground uppercase">Total</p>
-          </Card>
 
-          <Card className="p-4">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center">
+            <div className="flex items-center gap-3 group">
+              <div className="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                 <Clock className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
               </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground leading-none mb-1">{stats.pending}</p>
+                <p className="text-xs text-muted-foreground font-medium">Pending</p>
+              </div>
             </div>
-            <p className="text-2xl font-bold mb-1">{stats.pending}</p>
-            <p className="text-xs font-medium text-muted-foreground uppercase">Pending</p>
-          </Card>
 
-          <Card className="p-4">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center">
+            <div className="flex items-center gap-3 group">
+              <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                 <AlertCircle className="w-5 h-5 text-purple-600 dark:text-purple-400" />
               </div>
-            </div>
-            <p className="text-2xl font-bold mb-1">{stats.inProgress}</p>
-            <p className="text-xs font-medium text-muted-foreground uppercase">In Progress</p>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center">
-                <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+              <div>
+                <p className="text-2xl font-bold text-foreground leading-none mb-1">{stats.inProgress}</p>
+                <p className="text-xs text-muted-foreground font-medium">In Progress</p>
               </div>
             </div>
-            <p className="text-2xl font-bold mb-1">{stats.resolved}</p>
-            <p className="text-xs font-medium text-muted-foreground uppercase">Resolved</p>
-          </Card>
 
-          <Card className="p-4">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center">
+            <div className="flex items-center gap-3 group">
+              <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground leading-none mb-1">{stats.resolved}</p>
+                <p className="text-xs text-muted-foreground font-medium">Resolved</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 group">
+              <div className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                 <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground leading-none mb-1">{stats.high}</p>
+                <p className="text-xs text-muted-foreground font-medium">High Priority</p>
+              </div>
             </div>
-            <p className="text-2xl font-bold mb-1">{stats.high}</p>
-            <p className="text-xs font-medium text-muted-foreground uppercase">High Priority</p>
-          </Card>
+          </div>
         </div>
 
         {/* Issues Table */}
