@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './store/AuthContext';
+import { AuthProvider, useAuth } from './providers/AuthProvider';
 import { Navigation } from './components/Navigation';
 import { Chatbot } from './components/Chatbot';
 import { LoginPage } from './pages/LoginPage';
@@ -25,7 +25,7 @@ function AppRoutes() {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground">
       {user && <Navigation />}
       <Routes>
         <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage />} />

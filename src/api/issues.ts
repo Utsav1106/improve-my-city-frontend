@@ -1,7 +1,6 @@
 import type { Issue, IssueStatus, IssueCategory, Comment } from '../types';
 import { mockIssues } from './mockData';
 
-// Mock delay to mimic network request
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 class IssuesAPI {
@@ -161,6 +160,86 @@ class IssuesAPI {
       inProgress: this.issues.filter(i => i.status === 'In Progress').length,
       resolved: this.issues.filter(i => i.status === 'Resolved').length,
       rejected: this.issues.filter(i => i.status === 'Rejected').length,
+    };
+  }
+
+  // Calculate distance between two coordinates using Haversine formula
+  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371; // Radius of the Earth in km
+    const dLat = this.deg2rad(lat2 - lat1);
+    const dLon = this.deg2rad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  private deg2rad(deg: number): number {
+    return deg * (Math.PI / 180);
+  }
+
+  async getFilteredIssues(
+    category?: IssueCategory | 'All',
+    location?: { latitude: number; longitude: number } | null
+  ): Promise<Issue[]> {
+    await delay(500);
+    
+    let filtered = [...this.issues];
+
+    // Filter by category
+    if (category && category !== 'All') {
+      filtered = filtered.filter(issue => issue.category === category);
+    }
+
+    // Filter and sort by location
+    if (location && location.latitude && location.longitude) {
+      filtered = filtered.map(issue => ({
+        ...issue,
+        distance: this.calculateDistance(
+          location.latitude,
+          location.longitude,
+          issue.location.latitude,
+          issue.location.longitude
+        ),
+      })).sort((a, b) => (a.distance || 0) - (b.distance || 0));
+    } else {
+      // Default sort by date
+      filtered = filtered.sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    }
+
+    return filtered;
+  }
+
+  // Geocoding mock - in real app, this would call a geocoding API
+  async geocodeLocation(query: string): Promise<{ latitude: number; longitude: number } | null> {
+    await delay(400);
+    
+    // Mock geocoding - returns random coordinates near a city center
+    // In production, integrate with Google Maps, Mapbox, or OpenStreetMap API
+    if (!query.trim()) return null;
+    
+    // Mock coordinates (e.g., for demo purposes)
+    const mockCoordinates: { [key: string]: { latitude: number; longitude: number } } = {
+      'downtown': { latitude: 40.7128, longitude: -74.0060 },
+      'uptown': { latitude: 40.7829, longitude: -73.9654 },
+      'brooklyn': { latitude: 40.6782, longitude: -73.9442 },
+    };
+
+    const lowerQuery = query.toLowerCase();
+    for (const [key, coords] of Object.entries(mockCoordinates)) {
+      if (lowerQuery.includes(key)) {
+        return coords;
+      }
+    }
+
+    // Return random coordinates as fallback
+    return {
+      latitude: 40.7128 + (Math.random() - 0.5) * 0.2,
+      longitude: -74.0060 + (Math.random() - 0.5) * 0.2,
     };
   }
 }

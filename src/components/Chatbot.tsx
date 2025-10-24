@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from '../store/AuthContext';
+import { useAuth } from '../providers/AuthProvider';
 import { issuesAPI } from '../api/issues';
 
 interface Message {

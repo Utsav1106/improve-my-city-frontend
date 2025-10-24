@@ -1,11 +1,21 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../store/AuthContext";
+import { useAuth } from "../providers/AuthProvider";
 import { issuesAPI } from "../api/issues";
 import type { IssueCategory } from "../types";
-import { Input, TextArea } from "../components/Input";
-import { Button } from "../components/Button";
-import { Card } from "../components/Card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectValue,
+  SelectItem,
+} from "@/components/ui/select";
+import { Loader2, X, MapPin, Camera, AlertCircle } from "lucide-react";
 
 const categories: IssueCategory[] = [
   "Pothole",
@@ -29,8 +39,8 @@ export function ReportIssuePage() {
     address: "",
     latitude: 40.7128,
     longitude: -74.006,
-    photoUrl: "",
   });
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -39,6 +49,23 @@ export function ReportIssuePage() {
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }));
     }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUploadedImages((prev) => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setUploadedImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   const validate = () => {
@@ -61,8 +88,8 @@ export function ReportIssuePage() {
     setIsSubmitting(true);
 
     try {
-      const photos = formData.photoUrl
-        ? [formData.photoUrl]
+      const photos = uploadedImages.length > 0
+        ? uploadedImages
         : [
             "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800",
           ];
@@ -113,165 +140,246 @@ export function ReportIssuePage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Report a Civic Issue
-        </h1>
-        <p className="text-gray-600">
-          Help improve your community by reporting issues that need attention
-        </p>
-      </div>
+    <div className="min-h-screen bg-linear-to-br from-background via-background to-muted/10">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-3 bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            Report a Civic Issue
+          </h1>
+          <p className="text-muted-foreground text-lg">
+            Help improve your community by reporting issues that need attention
+          </p>
+        </div>
 
-      <Card>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <Input
-            label="Issue Title"
-            value={formData.title}
-            onChange={(e) => handleChange("title", e.target.value)}
-            placeholder="Brief description of the issue"
-            error={errors.title}
-            required
-          />
-
-          <TextArea
-            label="Detailed Description"
-            value={formData.description}
-            onChange={(e) => handleChange("description", e.target.value)}
-            placeholder="Provide more details about the issue..."
-            rows={5}
-            error={errors.description}
-            required
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category
-              </label>
-              <select
-                value={formData.category}
-                onChange={(e) => handleChange("category", e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-black focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-
-              >
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Priority
-              </label>
-              <select
-                value={formData.priority}
-                onChange={(e) => handleChange("priority", e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-black focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              >
-                <option value="Low">Low</option>
-                <option value="Medium">Medium</option>
-                <option value="High">High</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Location
-            </label>
-            <div className="flex gap-2">
+        <Card className="bg-card/50 backdrop-blur-sm overflow-hidden">
+          <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-8">
+            {/* Title */}
+            <div className="space-y-2">
+              <Label htmlFor="title" className="text-base font-semibold">Issue Title</Label>
               <Input
-                value={formData.address}
-                onChange={(e) => handleChange("address", e.target.value)}
-                placeholder="Enter address or location"
-                error={errors.address}
+                id="title"
+                value={formData.title}
+                onChange={(e) => handleChange("title", e.target.value)}
+                placeholder="Brief description of the issue"
                 required
-                className="flex-1"
+                aria-invalid={!!errors.title}
+                className="h-12 text-base"
               />
+              {errors.title && (
+                <div className="flex items-center gap-2 text-sm text-destructive">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.title}
+                </div>
+              )}
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-base font-semibold">Detailed Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => handleChange("description", e.target.value)}
+                placeholder="Provide more details about the issue..."
+                rows={6}
+                required
+                aria-invalid={!!errors.description}
+                className="text-base resize-none"
+              />
+              {errors.description && (
+                <div className="flex items-center gap-2 text-sm text-destructive">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.description}
+                </div>
+              )}
+            </div>
+
+            {/* Category and Priority */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">Category</Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(val) => handleChange("category", val)}
+                >
+                  <SelectTrigger className="h-12 text-base">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-base font-semibold">Priority</Label>
+                <Select
+                  value={formData.priority}
+                  onValueChange={(val) => handleChange("priority", val)}
+                >
+                  <SelectTrigger className="h-12 text-base">
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Low">Low</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="High">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Location */}
+            <div className="space-y-2">
+              <Label className="text-base font-semibold">Location</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={formData.address}
+                  onChange={(e) => handleChange("address", e.target.value)}
+                  placeholder="Enter address or location"
+                  required
+                  className="flex-1 h-12 text-base"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={useCurrentLocation}
+                  className="h-12 px-4"
+                >
+                  <MapPin className="w-5 h-5 mr-2" />
+                  Use GPS
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                Coordinates: {formData.latitude.toFixed(4)}, {formData.longitude.toFixed(4)}
+              </p>
+              {errors.address && (
+                <div className="flex items-center gap-2 text-sm text-destructive">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.address}
+                </div>
+              )}
+            </div>
+
+            {/* Image Upload */}
+            <div className="space-y-3">
+              <Label className="text-base font-semibold">Photos (Optional)</Label>
+              <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors bg-muted/20">
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="image-upload"
+                />
+                <label htmlFor="image-upload" className="cursor-pointer">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Camera className="w-8 h-8 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-base font-medium text-foreground mb-1">
+                        Click to upload photos
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        PNG, JPG up to 10MB (Max 5 images)
+                      </p>
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+              {/* Image Previews */}
+              {uploadedImages.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+                  {uploadedImages.map((image, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={image}
+                        alt={`Upload ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute top-2 right-2 w-8 h-8 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Tips Section */}
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-5">
+              <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Tips for Effective Reporting
+              </h4>
+              <ul className="text-sm text-muted-foreground space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>Be specific and descriptive in your title</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>Include as many details as possible</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>Provide accurate location information</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>Add photos if available for better context</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Submit Buttons */}
+            <div className="flex gap-4 pt-4">
+              <Button 
+                type="submit" 
+                className="flex-1 h-12 text-base font-semibold" 
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Submitting...
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Submit Report
+                  </span>
+                )}
+              </Button>
               <Button
                 type="button"
                 variant="outline"
-                onClick={useCurrentLocation}
+                onClick={() => navigate(-1)}
+                className="h-12 px-8 text-base"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-                Use GPS
+                Cancel
               </Button>
             </div>
-            <p className="mt-1 text-sm text-gray-500">
-              Coordinates: {formData.latitude.toFixed(4)},{" "}
-              {formData.longitude.toFixed(4)}
-            </p>
-          </div>
-
-          <Input
-            label="Photo URL (Optional)"
-            value={formData.photoUrl}
-            onChange={(e) => handleChange("photoUrl", e.target.value)}
-            placeholder="https://example.com/photo.jpg"
-          />
-
-          {formData.photoUrl && (
-            <div className="mt-2">
-              <img
-                src={formData.photoUrl}
-                alt="Preview"
-                className="w-full h-64 object-cover rounded-lg"
-                onError={(e) => {
-                  e.currentTarget.src =
-                    "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800";
-                }}
-              />
-            </div>
-          )}
-
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="font-semibold text-blue-900 mb-2">
-              Tips for Effective Reporting:
-            </h4>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li>• Be specific and descriptive in your title</li>
-              <li>• Include as many details as possible</li>
-              <li>• Provide accurate location information</li>
-              <li>• Add photos if available for better context</li>
-            </ul>
-          </div>
-
-          <div className="flex gap-4">
-            <Button type="submit" isLoading={isSubmitting} className="flex-1">
-              Submit Report
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate(-1)}
-            >
-              Cancel
-            </Button>
-          </div>
-        </form>
-      </Card>
+          </form>
+        </Card>
+      </div>
     </div>
   );
 }

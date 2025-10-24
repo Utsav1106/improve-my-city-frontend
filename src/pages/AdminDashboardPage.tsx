@@ -1,12 +1,20 @@
 import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../store/AuthContext';
+import { useAuth } from '../providers/AuthProvider';
 import { issuesAPI } from '../api/issues';
 import type { Issue, IssueStatus } from '../types';
 import { StatusBadge, PriorityBadge } from '../components/Badge';
-import { Card } from '../components/Card';
-import { Button } from '../components/Button';
+import { Preloader } from '../components/Preloader';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Modal } from '../components/Modal';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Shield, ArrowUpDown, Camera, X, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+
+type SortField = 'title' | 'createdAt' | 'upvotes' | 'priority' | 'status';
+type SortDirection = 'asc' | 'desc';
 
 export function AdminDashboardPage() {
   const { user } = useAuth();
@@ -14,6 +22,13 @@ export function AdminDashboardPage() {
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [sortField, setSortField] = useState<SortField>('createdAt');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  // Resolution modal state
+  const [showResolveModal, setShowResolveModal] = useState(false);
+  const [resolutionMessage, setResolutionMessage] = useState('');
+  const [resolutionImages, setResolutionImages] = useState<string[]>([]);
 
   const loadIssues = async () => {
     setIsLoading(true);
@@ -35,7 +50,45 @@ export function AdminDashboardPage() {
     return <Navigate to="/" replace />;
   }
 
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  const sortedIssues = [...issues].sort((a, b) => {
+    let aValue: any = a[sortField];
+    let bValue: any = b[sortField];
+
+    if (sortField === 'createdAt') {
+      aValue = new Date(a.createdAt).getTime();
+      bValue = new Date(b.createdAt).getTime();
+    } else if (sortField === 'priority') {
+      const priorityOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
+      aValue = priorityOrder[a.priority];
+      bValue = priorityOrder[b.priority];
+    } else if (sortField === 'status') {
+      const statusOrder = { 'Pending': 1, 'In Progress': 2, 'Resolved': 3, 'Rejected': 4 };
+      aValue = statusOrder[a.status];
+      bValue = statusOrder[b.status];
+    }
+
+    if (sortDirection === 'asc') {
+      return aValue > bValue ? 1 : -1;
+    } else {
+      return aValue < bValue ? 1 : -1;
+    }
+  });
+
   const handleUpdateStatus = async (issueId: string, newStatus: IssueStatus) => {
+    if (newStatus === 'Resolved') {
+      setShowResolveModal(true);
+      return;
+    }
+
     setIsUpdating(true);
     try {
       await issuesAPI.updateIssueStatus(issueId, newStatus);
@@ -49,6 +102,43 @@ export function AdminDashboardPage() {
     }
   };
 
+  const handleResolveWithDetails = async () => {
+    if (!selectedIssue) return;
+
+    setIsUpdating(true);
+    try {
+      await issuesAPI.updateIssueStatus(selectedIssue.id, 'Resolved');
+      // In a real app, you'd also send resolutionMessage and resolutionImages to the API
+      await loadIssues();
+      setSelectedIssue(null);
+      setShowResolveModal(false);
+      setResolutionMessage('');
+      setResolutionImages([]);
+    } catch (error) {
+      console.error('Failed to resolve issue:', error);
+      alert('Failed to resolve issue');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setResolutionImages((prev) => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setResolutionImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const stats = {
     total: issues.length,
     pending: issues.filter((i) => i.status === 'Pending').length,
@@ -58,239 +148,357 @@ export function AdminDashboardPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading admin dashboard...</p>
-        </div>
-      </div>
-    );
+    return <Preloader />;
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Admin Header */}
-      <div className="bg-linear-to-r from-purple-600 to-pink-600 rounded-2xl p-8 mb-8 text-white shadow-xl">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center space-x-2 mb-2">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-              <h1 className="text-4xl font-bold">Admin Dashboard</h1>
+    <div className="min-h-screen bg-linear-to-br from-background via-background to-muted/10">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-12 py-8 sm:py-12">
+        {/* Admin Header */}
+        <div className="relative overflow-hidden rounded-3xl p-8 sm:p-10 lg:p-12 mb-8 shadow-2xl bg-linear-to-br from-purple-600 via-purple-500 to-indigo-600 text-white">
+          <div className="relative z-10">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-4 rounded-full bg-white/20 backdrop-blur-sm border border-white/30">
+              <Shield className="w-4 h-4" />
+              <span className="text-sm font-medium">Administrator</span>
             </div>
-            <p className="text-purple-100 text-lg">
-              Manage and resolve civic issues reported by citizens
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 tracking-tight">
+              Admin Dashboard
+            </h1>
+            <p className="opacity-90 text-base sm:text-lg mb-8 max-w-2xl leading-relaxed">
+              Manage and resolve civic issues reported by citizens. Keep track of all reports and maintain community trust.
             </p>
           </div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full blur-3xl"></div>
         </div>
-      </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-        <Card className="border-l-4 border-purple-500">
-          <div className="text-center">
-            <p className="text-sm font-medium text-gray-600">Total Issues</p>
-            <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+          <Card className="p-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-2xl font-bold mb-1">{stats.total}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase">Total</p>
+          </Card>
+
+          <Card className="p-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center">
+                <Clock className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+              </div>
+            </div>
+            <p className="text-2xl font-bold mb-1">{stats.pending}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase">Pending</p>
+          </Card>
+
+          <Card className="p-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center">
+                <AlertCircle className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              </div>
+            </div>
+            <p className="text-2xl font-bold mb-1">{stats.inProgress}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase">In Progress</p>
+          </Card>
+
+          <Card className="p-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+              </div>
+            </div>
+            <p className="text-2xl font-bold mb-1">{stats.resolved}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase">Resolved</p>
+          </Card>
+
+          <Card className="p-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-2xl font-bold mb-1">{stats.high}</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase">High Priority</p>
+          </Card>
+        </div>
+
+        {/* Issues Table */}
+        <Card className="bg-card/50 backdrop-blur-sm">
+          <div className="p-6 border-b border-border">
+            <h2 className="text-2xl font-bold">All Issues</h2>
+            <p className="text-sm text-muted-foreground mt-1">Manage all reported civic issues</p>
           </div>
-        </Card>
-
-        <Card className="border-l-4 border-yellow-500">
-          <div className="text-center">
-            <p className="text-sm font-medium text-gray-600">Pending</p>
-            <p className="text-3xl font-bold text-yellow-600">{stats.pending}</p>
-          </div>
-        </Card>
-
-        <Card className="border-l-4 border-blue-500">
-          <div className="text-center">
-            <p className="text-sm font-medium text-gray-600">In Progress</p>
-            <p className="text-3xl font-bold text-blue-600">{stats.inProgress}</p>
-          </div>
-        </Card>
-
-        <Card className="border-l-4 border-green-500">
-          <div className="text-center">
-            <p className="text-sm font-medium text-gray-600">Resolved</p>
-            <p className="text-3xl font-bold text-green-600">{stats.resolved}</p>
-          </div>
-        </Card>
-
-        <Card className="border-l-4 border-red-500">
-          <div className="text-center">
-            <p className="text-sm font-medium text-gray-600">High Priority</p>
-            <p className="text-3xl font-bold text-red-600">{stats.high}</p>
-          </div>
-        </Card>
-      </div>
-
-      {/* Issues Table */}
-      <Card>
-        <h2 className="text-xl font-bold text-gray-900 mb-4">All Issues</h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Issue
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Reporter
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Category
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Priority
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Upvotes
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {issues.map((issue) => (
-                <tr key={issue.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">{issue.title}</div>
-                    <div className="text-sm text-gray-500">{issue.location.address}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{issue.reportedByName}</div>
-                    <div className="text-sm text-gray-500">
-                      {new Date(issue.createdAt).toLocaleDateString()}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm text-gray-900">{issue.category}</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <PriorityBadge priority={issue.priority} />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusBadge status={issue.status} />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center text-sm text-gray-900">
-                      <svg className="w-4 h-4 mr-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                      </svg>
-                      {issue.upvotes}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setSelectedIssue(issue)}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border/50">
+                  <th className="text-left p-4">
+                    <button
+                      onClick={() => handleSort('title')}
+                      className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      Manage
-                    </Button>
-                  </td>
+                      Issue
+                      <ArrowUpDown className="w-4 h-4" />
+                    </button>
+                  </th>
+                  <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Reporter</th>
+                  <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Category</th>
+                  <th className="text-left p-4">
+                    <button
+                      onClick={() => handleSort('priority')}
+                      className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Priority
+                      <ArrowUpDown className="w-4 h-4" />
+                    </button>
+                  </th>
+                  <th className="text-left p-4">
+                    <button
+                      onClick={() => handleSort('status')}
+                      className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Status
+                      <ArrowUpDown className="w-4 h-4" />
+                    </button>
+                  </th>
+                  <th className="text-left p-4">
+                    <button
+                      onClick={() => handleSort('upvotes')}
+                      className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Upvotes
+                      <ArrowUpDown className="w-4 h-4" />
+                    </button>
+                  </th>
+                  <th className="text-right p-4 text-sm font-semibold text-muted-foreground">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-
-      {/* Issue Management Modal */}
-      <Modal
-        isOpen={!!selectedIssue}
-        onClose={() => setSelectedIssue(null)}
-        title="Manage Issue"
-        size="lg"
-      >
-        {selectedIssue && (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">{selectedIssue.title}</h3>
-              <div className="flex gap-2 mb-4">
-                <StatusBadge status={selectedIssue.status} />
-                <PriorityBadge priority={selectedIssue.priority} />
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
-                  {selectedIssue.category}
-                </span>
-              </div>
-              <p className="text-gray-600">{selectedIssue.description}</p>
-            </div>
-
-            {selectedIssue.photos && selectedIssue.photos.length > 0 && (
-              <div>
-                <img
-                  src={selectedIssue.photos[0]}
-                  alt={selectedIssue.title}
-                  className="w-full h-64 object-cover rounded-lg"
-                />
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium text-gray-700">Reported By</p>
-                <p className="text-gray-900">{selectedIssue.reportedByName}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">Location</p>
-                <p className="text-gray-900">{selectedIssue.location.address}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">Created</p>
-                <p className="text-gray-900">{new Date(selectedIssue.createdAt).toLocaleString()}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">Upvotes</p>
-                <p className="text-gray-900">{selectedIssue.upvotes}</p>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Update Status</h4>
-              <div className="grid grid-cols-2 gap-3">
-                <Button
-                  variant="secondary"
-                  onClick={() => handleUpdateStatus(selectedIssue.id, 'In Progress')}
-                  isLoading={isUpdating}
-                  disabled={selectedIssue.status === 'In Progress'}
-                >
-                  Mark In Progress
-                </Button>
-                <Button
-                  variant="success"
-                  onClick={() => handleUpdateStatus(selectedIssue.id, 'Resolved')}
-                  isLoading={isUpdating}
-                  disabled={selectedIssue.status === 'Resolved'}
-                >
-                  Mark Resolved
-                </Button>
-                <Button
-                  variant="danger"
-                  onClick={() => handleUpdateStatus(selectedIssue.id, 'Rejected')}
-                  isLoading={isUpdating}
-                  disabled={selectedIssue.status === 'Rejected'}
-                >
-                  Reject Issue
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleUpdateStatus(selectedIssue.id, 'Pending')}
-                  isLoading={isUpdating}
-                  disabled={selectedIssue.status === 'Pending'}
-                >
-                  Reset to Pending
-                </Button>
-              </div>
-            </div>
+              </thead>
+              <tbody>
+                {sortedIssues.map((issue) => (
+                  <tr key={issue.id} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
+                    <td className="p-4">
+                      <div className="max-w-xs">
+                        <p className="font-semibold text-sm line-clamp-1">{issue.title}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-1">{issue.location.address}</p>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div>
+                        <p className="text-sm">{issue.reportedByName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(issue.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <span className="text-sm px-2.5 py-1 rounded-full bg-primary/10 text-primary">{issue.category}</span>
+                    </td>
+                    <td className="p-4">
+                      <PriorityBadge priority={issue.priority} />
+                    </td>
+                    <td className="p-4">
+                      <StatusBadge status={issue.status} />
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-1.5 text-sm">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                        </svg>
+                        {issue.upvotes}
+                      </div>
+                    </td>
+                    <td className="p-4 text-right">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setSelectedIssue(issue)}
+                      >
+                        Manage
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+        </Card>
+
+        {/* Management Modal */}
+        {selectedIssue && (
+          <Modal
+            isOpen={!!selectedIssue}
+            onClose={() => {
+              setSelectedIssue(null);
+              setShowResolveModal(false);
+              setResolutionMessage('');
+              setResolutionImages([]);
+            }}
+          >
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold mb-2">{selectedIssue.title}</h2>
+                <div className="flex gap-2 flex-wrap mb-4">
+                  <StatusBadge status={selectedIssue.status} />
+                  <PriorityBadge priority={selectedIssue.priority} />
+                </div>
+              </div>
+
+              {selectedIssue.photos && selectedIssue.photos.length > 0 && (
+                <div className="rounded-xl overflow-hidden border border-border">
+                  <img
+                    src={selectedIssue.photos[0]}
+                    alt={selectedIssue.title}
+                    className="w-full h-64 object-cover"
+                  />
+                </div>
+              )}
+
+              <div>
+                <h3 className="font-semibold mb-2">Description</h3>
+                <p className="text-muted-foreground leading-relaxed">{selectedIssue.description}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-xl">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Category</p>
+                  <p className="font-medium">{selectedIssue.category}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Location</p>
+                  <p className="font-medium text-sm">{selectedIssue.location.address}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Reported By</p>
+                  <p className="font-medium">{selectedIssue.reportedByName}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Date</p>
+                  <p className="font-medium">
+                    {new Date(selectedIssue.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+
+              {!showResolveModal ? (
+                <div className="flex gap-3">
+                  {selectedIssue.status === 'Pending' && (
+                    <Button
+                      onClick={() => handleUpdateStatus(selectedIssue.id, 'In Progress')}
+                      className="flex-1"
+                    >
+                      Mark In Progress
+                    </Button>
+                  )}
+                  {selectedIssue.status === 'In Progress' && (
+                    <Button
+                      onClick={() => setShowResolveModal(true)}
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                    >
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      Mark Resolved
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    onClick={() => setSelectedIssue(null)}
+                  >
+                    Close
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4 p-6 bg-muted/30 rounded-xl">
+                  <h3 className="font-semibold text-lg flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-green-600" />
+                    Resolution Details
+                  </h3>
+
+                  <div>
+                    <Label htmlFor="resolutionMessage">Resolution Message</Label>
+                    <Textarea
+                      id="resolutionMessage"
+                      value={resolutionMessage}
+                      onChange={(e) => setResolutionMessage(e.target.value)}
+                      placeholder="Describe how the issue was resolved..."
+                      rows={4}
+                      className="mt-2"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="resolutionImages">Resolution Images</Label>
+                    <div className="mt-2">
+                      <label
+                        htmlFor="resolutionImages"
+                        className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-border rounded-xl hover:border-primary cursor-pointer transition-colors"
+                      >
+                        <Camera className="w-5 h-5" />
+                        <span className="text-sm font-medium">Upload Resolution Photos</span>
+                      </label>
+                      <Input
+                        id="resolutionImages"
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                    </div>
+
+                    {resolutionImages.length > 0 && (
+                      <div className="grid grid-cols-2 gap-3 mt-3">
+                        {resolutionImages.map((img, idx) => (
+                          <div key={idx} className="relative group">
+                            <img
+                              src={img}
+                              alt={`Resolution ${idx + 1}`}
+                              className="w-full h-32 object-cover rounded-lg"
+                            />
+                            <button
+                              onClick={() => removeImage(idx)}
+                              className="absolute top-2 right-2 p-1.5 bg-red-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-4 h-4 text-white" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <Button
+                      onClick={handleResolveWithDetails}
+                      disabled={!resolutionMessage.trim() || isUpdating}
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                    >
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      {isUpdating ? 'Resolving...' : 'Confirm Resolution'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowResolveModal(false);
+                        setResolutionMessage('');
+                        setResolutionImages([]);
+                      }}
+                      disabled={isUpdating}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </Modal>
         )}
-      </Modal>
+      </div>
     </div>
   );
-}
+};
