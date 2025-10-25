@@ -14,8 +14,8 @@ export class ValidationError extends ApiError {
     }
 }
 
-export class UnauthorizedError extends ApiError {
-    constructor(message: string) {
+
+constructor(message: string) {
         super(message, 401);
     }
 }

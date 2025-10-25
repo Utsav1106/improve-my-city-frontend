@@ -35,7 +35,7 @@ A modern, comprehensive web application that allows citizens to report, track, a
 - **Transparency**
   - Public page showing all resolved issues
   - Statistics dashboard
-  - Issue status tracking (Pending, In Progress, Resolved, Rejected)
+  - Issue status tracking (Pending, In Progress, Resolved, Closed)
 
 - **Admin Dashboard** (Admin users only)
   - View all issues in a comprehensive table
@@ -188,7 +188,7 @@ The application uses mock data and simulated API calls to demonstrate functional
 1. **Pending** - Newly reported issue
 2. **In Progress** - Admin has started working on it
 3. **Resolved** - Issue has been fixed
-4. **Rejected** - Issue was deemed invalid
+4. **Closed** - Issue was closed
 
 ## 🎯 Features Breakdown
 

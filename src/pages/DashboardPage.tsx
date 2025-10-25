@@ -13,7 +13,7 @@ import { TrendingUp } from 'lucide-react';
 
 export function DashboardPage() {
   const [issues, setIssues] = useState<Issue[]>([]);
-  const [stats, setStats] = useState({ total: 0, pending: 0, inProgress: 0, resolved: 0, rejected: 0 });
+  const [stats, setStats] = useState({ total: 0, pending: 0, inProgress: 0, resolved: 0, closed: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);

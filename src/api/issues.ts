@@ -98,7 +98,7 @@ class IssuesAPI {
     pending: number;
     inProgress: number;
     resolved: number;
-    rejected: number;
+    closed: number;
   }> {
     const response = await issuesService.getIssues();
     const issues = response.issues;
@@ -108,7 +108,7 @@ class IssuesAPI {
       pending: issues.filter(i => i.status === 'open').length,
       inProgress: issues.filter(i => i.status === 'in_progress').length,
       resolved: issues.filter(i => i.status === 'resolved').length,
-      rejected: issues.filter(i => i.status === 'closed').length,
+      closed: issues.filter(i => i.status === 'closed').length,
     };
   }
 
