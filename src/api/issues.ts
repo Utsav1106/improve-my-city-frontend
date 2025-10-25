@@ -1,35 +1,30 @@
 import type { Issue, IssueStatus, IssueCategory, Comment } from '../types';
-import { mockIssues } from './mockData';
-
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+import * as issuesService from '../services/issues';
 
 class IssuesAPI {
-  private issues: Issue[] = [...mockIssues];
-
-  async getAllIssues(): Promise<Issue[]> {
-    await delay(600);
-    return [...this.issues].sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+  async getAllIssues(page?: number, limit?: number): Promise<Issue[]> {
+    const response = await issuesService.getIssues({ page, limit });
+    return response.issues.map(this.normalizeIssue);
   }
 
   async getIssueById(id: string): Promise<Issue | null> {
-    await delay(400);
-    return this.issues.find(issue => issue.id === id) || null;
+    try {
+      const response = await issuesService.getIssues();
+      const issue = response.issues.find(i => i.id === id);
+      return issue ? this.normalizeIssue(issue) : null;
+    } catch {
+      return null;
+    }
   }
 
   async getIssuesByUser(userId: string): Promise<Issue[]> {
-    await delay(500);
-    return this.issues
-      .filter(issue => issue.reportedBy === userId)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const response = await issuesService.getIssues({ userId });
+    return response.issues.map(this.normalizeIssue);
   }
 
   async getResolvedIssues(): Promise<Issue[]> {
-    await delay(500);
-    return this.issues
-      .filter(issue => issue.status === 'Resolved')
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    const response = await issuesService.getIssues({ status: 'resolved' });
+    return response.issues.map(this.normalizeIssue);
   }
 
   async createIssue(
@@ -39,123 +34,63 @@ class IssuesAPI {
     priority: 'Low' | 'Medium' | 'High',
     location: { address: string; latitude: number; longitude: number },
     photos: string[],
-    userId: string,
+    _userId: string,
     userName: string
   ): Promise<Issue> {
-    await delay(800);
-
-    const newIssue: Issue = {
-      id: Date.now().toString(),
+    const issue = await issuesService.createIssue({
       title,
       description,
       category,
-      status: 'Pending',
+      uploadUrls: photos,
+      location
+    });
+
+    return this.normalizeIssue({
+      ...issue,
       priority,
-      location,
-      photos,
-      reportedBy: userId,
-      reportedByName: userName,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      upvotes: 0,
-      upvotedBy: [],
-      comments: [],
-    };
-
-    this.issues.push(newIssue);
-    return newIssue;
-  }
-
-  async uploadPhoto(file: File): Promise<string> {
-    await delay(500);
-    
-    // In a real app, this would upload to a cloud storage service
-    // For now, we'll convert to base64 data URL
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
+      reportedByName: userName
     });
   }
 
-  async updateIssueStatus(issueId: string, status: IssueStatus): Promise<Issue> {
-    await delay(500);
+  async uploadPhoto(file: File): Promise<string> {
+    const urls = await issuesService.uploadIssueImages([file]);
+    return urls[0];
+  }
 
-    const issue = this.issues.find(i => i.id === issueId);
-    if (!issue) {
-      throw new Error('Issue not found');
-    }
+  async uploadIssueImages(files: File[]): Promise<string[]> {
+    return await issuesService.uploadIssueImages(files);
+  }
 
-    issue.status = status;
-    issue.updatedAt = new Date().toISOString();
-    
-    if (status === 'Resolved') {
-      issue.resolvedAt = new Date().toISOString();
-    }
-
+  async updateIssueStatus(issueId: string, status: IssueStatus, resolutionMessage?: string, resolutionUploadUrls?: string[]): Promise<Issue> {
+    await issuesService.updateIssueStatus(issueId, status, resolutionMessage, resolutionUploadUrls);
+    const issue = await this.getIssueById(issueId);
+    if (!issue) throw new Error('Issue not found');
     return issue;
   }
 
-  async upvoteIssue(issueId: string, userId: string): Promise<Issue> {
-    await delay(300);
-
-    const issue = this.issues.find(i => i.id === issueId);
-    if (!issue) {
-      throw new Error('Issue not found');
-    }
-
-    if (issue.upvotedBy.includes(userId)) {
-      // Remove upvote
-      issue.upvotedBy = issue.upvotedBy.filter(id => id !== userId);
-      issue.upvotes--;
-    } else {
-      // Add upvote
-      issue.upvotedBy.push(userId);
-      issue.upvotes++;
-    }
-
-    issue.updatedAt = new Date().toISOString();
+  async upvoteIssue(issueId: string, _userId: string): Promise<Issue> {
+    await issuesService.upvoteIssue(issueId);
+    const issue = await this.getIssueById(issueId);
+    if (!issue) throw new Error('Issue not found');
     return issue;
   }
 
-  async addComment(issueId: string, userId: string, userName: string, text: string): Promise<Comment> {
-    await delay(400);
-
-    const issue = this.issues.find(i => i.id === issueId);
-    if (!issue) {
-      throw new Error('Issue not found');
-    }
-
-    const comment: Comment = {
-      id: `c${Date.now()}`,
-      issueId,
-      userId,
+  async addComment(issueId: string, _userId: string, userName: string, text: string): Promise<Comment> {
+    const comment = await issuesService.addComment(issueId, text, []);
+    return {
+      id: comment.id,
+      issueId: comment.issueId,
+      userId: comment.userId,
       userName,
       text,
-      createdAt: new Date().toISOString(),
+      createdAt: typeof comment.createdAt === 'number'
+        ? new Date(comment.createdAt).toISOString()
+        : String(comment.createdAt)
     };
-
-    issue.comments.push(comment);
-    issue.updatedAt = new Date().toISOString();
-
-    return comment;
   }
 
-  async deleteIssue(issueId: string, userId: string): Promise<void> {
-    await delay(400);
-
-    const issueIndex = this.issues.findIndex(i => i.id === issueId);
-    if (issueIndex === -1) {
-      throw new Error('Issue not found');
-    }
-
-    const issue = this.issues[issueIndex];
-    if (issue.reportedBy !== userId) {
-      throw new Error('You can only delete your own issues');
-    }
-
-    this.issues.splice(issueIndex, 1);
+  async deleteIssue(issueId: string, _userId: string): Promise<void> {
+    await issuesService.deleteIssue(issueId);
   }
 
   async getIssueStats(): Promise<{
@@ -165,77 +100,49 @@ class IssuesAPI {
     resolved: number;
     rejected: number;
   }> {
-    await delay(300);
+    const response = await issuesService.getIssues();
+    const issues = response.issues;
 
     return {
-      total: this.issues.length,
-      pending: this.issues.filter(i => i.status === 'Pending').length,
-      inProgress: this.issues.filter(i => i.status === 'In Progress').length,
-      resolved: this.issues.filter(i => i.status === 'Resolved').length,
-      rejected: this.issues.filter(i => i.status === 'Rejected').length,
+      total: issues.length,
+      pending: issues.filter(i => i.status === 'open').length,
+      inProgress: issues.filter(i => i.status === 'in_progress').length,
+      resolved: issues.filter(i => i.status === 'resolved').length,
+      rejected: issues.filter(i => i.status === 'closed').length,
     };
-  }
-
-  // Calculate distance between two coordinates using Haversine formula
-  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 6371; // Radius of the Earth in km
-    const dLat = this.deg2rad(lat2 - lat1);
-    const dLon = this.deg2rad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }
-
-  private deg2rad(deg: number): number {
-    return deg * (Math.PI / 180);
   }
 
   async getFilteredIssues(
     category?: IssueCategory | 'All',
-    location?: { latitude: number; longitude: number } | null
-  ): Promise<Issue[]> {
-    await delay(500);
-    
-    let filtered = [...this.issues];
+    location?: { latitude: number; longitude: number } | null,
+    page?: number,
+    limit?: number
+  ): Promise<{ issues: Issue[]; total: number; page: number; totalPages: number }> {
+    const filters: any = { page, limit };
 
-    // Filter by category
     if (category && category !== 'All') {
-      filtered = filtered.filter(issue => issue.category === category);
+      filters.category = category;
     }
 
-    // Filter and sort by location
-    if (location && location.latitude && location.longitude) {
-      filtered = filtered.map(issue => ({
-        ...issue,
-        distance: this.calculateDistance(
-          location.latitude,
-          location.longitude,
-          issue.location.latitude,
-          issue.location.longitude
-        ),
-      })).sort((a, b) => (a.distance || 0) - (b.distance || 0));
-    } else {
-      // Default sort by date
-      filtered = filtered.sort((a, b) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
+    if (location) {
+      filters.latitude = location.latitude;
+      filters.longitude = location.longitude;
+      filters.radiusKm = 100;
     }
 
-    return filtered;
+    const response = await issuesService.getIssues(filters);
+    return {
+      issues: response.issues.map(this.normalizeIssue),
+      total: response.count,
+      page: response.page || 1,
+      totalPages: response.totalPages || 1
+    };
   }
 
-  // Geocoding mock - in real app, this would call a geocoding API
   async geocodeLocation(query: string): Promise<{ latitude: number; longitude: number } | null> {
-    await delay(400);
-    
-    // Mock geocoding - returns random coordinates near a city center
-    // In production, integrate with Google Maps, Mapbox, or OpenStreetMap API
+    // Mock geocoding - in production, integrate with a geocoding API
     if (!query.trim()) return null;
-    
-    // Mock coordinates (e.g., for demo purposes)
+
     const mockCoordinates: { [key: string]: { latitude: number; longitude: number } } = {
       'downtown': { latitude: 40.7128, longitude: -74.0060 },
       'uptown': { latitude: 40.7829, longitude: -73.9654 },
@@ -249,12 +156,46 @@ class IssuesAPI {
       }
     }
 
-    // Return random coordinates as fallback
     return {
       latitude: 40.7128 + (Math.random() - 0.5) * 0.2,
       longitude: -74.0060 + (Math.random() - 0.5) * 0.2,
     };
   }
+
+  // Helper to normalize issue format between backend and frontend
+  private normalizeIssue = (issue: any): Issue => {
+    const createdAt = typeof issue.createdAt === 'number'
+      ? new Date(issue.createdAt).toISOString()
+      : issue.createdAt;
+
+    const updatedAt = typeof issue.updatedAt === 'number'
+      ? new Date(issue.updatedAt).toISOString()
+      : issue.updatedAt;
+
+    return {
+      id: issue.id || issue._id,
+      title: issue.title,
+      description: issue.description,
+      category: issue.category,
+      status: issue.status,
+      priority: issue.priority || 'Medium',
+      location: issue.location,
+      photos: issue.uploadUrls || issue.photos || [],
+      uploadUrls: issue.uploadUrls || issue.photos || [],
+      reportedBy: issue.userId || issue.reportedBy,
+      userId: issue.userId,
+      reportedByName: issue.reportedByName || 'User',
+      createdAt,
+      updatedAt,
+      resolvedAt: issue.resolvedAt,
+      upvotes: issue.upvotes || 0,
+      upvotedBy: issue.upvotedBy || [],
+      comments: issue.comments || [],
+      assignedTo: issue.assignedTo,
+      distance: issue.distance
+    };
+  }
 }
 
 export const issuesAPI = new IssuesAPI();
+

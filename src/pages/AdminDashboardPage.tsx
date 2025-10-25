@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Shield, ArrowUpDown, Camera, X, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 type SortField = 'title' | 'createdAt' | 'upvotes' | 'priority' | 'status';
 type SortDirection = 'asc' | 'desc';
@@ -67,11 +68,11 @@ export function AdminDashboardPage() {
       aValue = new Date(a.createdAt).getTime();
       bValue = new Date(b.createdAt).getTime();
     } else if (sortField === 'priority') {
-      const priorityOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
-      aValue = priorityOrder[a.priority];
-      bValue = priorityOrder[b.priority];
+      const priorityOrder: Record<string, number> = { 'High': 3, 'Medium': 2, 'Low': 1 };
+      aValue = priorityOrder[a.priority || 'Medium'];
+      bValue = priorityOrder[b.priority || 'Medium'];
     } else if (sortField === 'status') {
-      const statusOrder = { 'Pending': 1, 'In Progress': 2, 'Resolved': 3, 'Rejected': 4 };
+      const statusOrder: Record<string, number> = { 'open': 1, 'in_progress': 2, 'resolved': 3, 'closed': 4 };
       aValue = statusOrder[a.status];
       bValue = statusOrder[b.status];
     }
@@ -84,7 +85,7 @@ export function AdminDashboardPage() {
   });
 
   const handleUpdateStatus = async (issueId: string, newStatus: IssueStatus) => {
-    if (newStatus === 'Resolved') {
+    if (newStatus === 'resolved') {
       setShowResolveModal(true);
       return;
     }
@@ -94,9 +95,10 @@ export function AdminDashboardPage() {
       await issuesAPI.updateIssueStatus(issueId, newStatus);
       await loadIssues();
       setSelectedIssue(null);
+      toast.success('Issue status updated successfully');
     } catch (error) {
       console.error('Failed to update status:', error);
-      alert('Failed to update issue status');
+      toast.error('Failed to update issue status');
     } finally {
       setIsUpdating(false);
     }
@@ -107,16 +109,34 @@ export function AdminDashboardPage() {
 
     setIsUpdating(true);
     try {
-      await issuesAPI.updateIssueStatus(selectedIssue.id, 'Resolved');
-      // In a real app, you'd also send resolutionMessage and resolutionImages to the API
+      // Upload images if any
+      let uploadedImageUrls: string[] = [];
+      if (resolutionImages.length > 0) {
+        // Convert base64 images to files and upload
+        const uploadPromises = resolutionImages.map(async (base64Image, index) => {
+          const response = await fetch(base64Image);
+          const blob = await response.blob();
+          const file = new File([blob], `resolution-${index}.jpg`, { type: 'image/jpeg' });
+          return await issuesAPI.uploadPhoto(file);
+        });
+        uploadedImageUrls = await Promise.all(uploadPromises);
+      }
+
+      await issuesAPI.updateIssueStatus(
+        selectedIssue.id, 
+        'resolved',
+        resolutionMessage,
+        uploadedImageUrls
+      );
       await loadIssues();
       setSelectedIssue(null);
       setShowResolveModal(false);
       setResolutionMessage('');
       setResolutionImages([]);
+      toast.success('Issue resolved successfully');
     } catch (error) {
       console.error('Failed to resolve issue:', error);
-      alert('Failed to resolve issue');
+      toast.error('Failed to resolve issue');
     } finally {
       setIsUpdating(false);
     }
@@ -141,9 +161,9 @@ export function AdminDashboardPage() {
 
   const stats = {
     total: issues.length,
-    pending: issues.filter((i) => i.status === 'Pending').length,
-    inProgress: issues.filter((i) => i.status === 'In Progress').length,
-    resolved: issues.filter((i) => i.status === 'Resolved').length,
+    pending: issues.filter((i) => i.status === 'open').length,
+    inProgress: issues.filter((i) => i.status === 'in_progress').length,
+    resolved: issues.filter((i) => i.status === 'resolved').length,
     high: issues.filter((i) => i.priority === 'High').length,
   };
 
@@ -303,7 +323,7 @@ export function AdminDashboardPage() {
                       <span className="text-sm px-2.5 py-1 rounded-full bg-primary/10 text-primary">{issue.category}</span>
                     </td>
                     <td className="p-4">
-                      <PriorityBadge priority={issue.priority} />
+                      <PriorityBadge priority={issue.priority || 'Medium'} />
                     </td>
                     <td className="p-4">
                       <StatusBadge status={issue.status} />
@@ -348,7 +368,7 @@ export function AdminDashboardPage() {
                 <h2 className="text-2xl font-bold mb-2">{selectedIssue.title}</h2>
                 <div className="flex gap-2 flex-wrap mb-4">
                   <StatusBadge status={selectedIssue.status} />
-                  <PriorityBadge priority={selectedIssue.priority} />
+                  <PriorityBadge priority={selectedIssue.priority || 'Medium'} />
                 </div>
               </div>
 
@@ -390,15 +410,15 @@ export function AdminDashboardPage() {
 
               {!showResolveModal ? (
                 <div className="flex gap-3">
-                  {selectedIssue.status === 'Pending' && (
+                  {selectedIssue.status === 'open' && (
                     <Button
-                      onClick={() => handleUpdateStatus(selectedIssue.id, 'In Progress')}
+                      onClick={() => handleUpdateStatus(selectedIssue.id, 'in_progress')}
                       className="flex-1"
                     >
                       Mark In Progress
                     </Button>
                   )}
-                  {selectedIssue.status === 'In Progress' && (
+                  {selectedIssue.status === 'in_progress' && (
                     <Button
                       onClick={() => setShowResolveModal(true)}
                       className="flex-1 bg-green-600 hover:bg-green-700"

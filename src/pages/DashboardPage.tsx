@@ -15,33 +15,59 @@ export function DashboardPage() {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [stats, setStats] = useState({ total: 0, pending: 0, inProgress: 0, resolved: 0, rejected: 0 });
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalIssues, setTotalIssues] = useState(0);
+  const limit = 12; // Issues per page
   
   const { viewMode, categoryFilter, locationFilter } = useUIStore();
 
-  const loadData = async () => {
-    setIsLoading(true);
+  const loadData = async (showLoader = true) => {
+    if (showLoader) {
+      setIsLoading(true);
+    }
     try {
-      const [statsData, filteredIssues] = await Promise.all([
+      const [statsData, filteredData] = await Promise.all([
         issuesAPI.getIssueStats(),
         issuesAPI.getFilteredIssues(
           categoryFilter,
           locationFilter.latitude && locationFilter.longitude
             ? { latitude: locationFilter.latitude, longitude: locationFilter.longitude }
-            : null
+            : null,
+          currentPage,
+          limit
         ),
       ]);
-      setIssues(filteredIssues);
+      setIssues(filteredData.issues);
+      setTotalIssues(filteredData.total);
+      setTotalPages(filteredData.totalPages);
       setStats(statsData);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {
-      setIsLoading(false);
+      if (showLoader) {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handleIssueUpdate = (updatedIssue?: Issue) => {
+    if (updatedIssue) {
+      // Update the issue in the list without full reload
+      setIssues(prevIssues => 
+        prevIssues.map(issue => issue.id === updatedIssue.id ? updatedIssue : issue)
+      );
     }
   };
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1); // Reset to page 1 when filters change
+    loadData();
+  }, [categoryFilter, locationFilter]);
 
   if (isLoading) {
     return <Preloader />;
@@ -129,7 +155,7 @@ export function DashboardPage() {
 
         {/* Filter Bar */}
         <div className="mb-8">
-          <FilterBar onFilterChange={loadData} />
+          <FilterBar />
         </div>
 
         {/* Issues Header */}
@@ -154,11 +180,61 @@ export function DashboardPage() {
         {viewMode === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {issues.map((issue) => (
-              <IssueCard key={issue.id} issue={issue} onUpdate={loadData} />
+              <IssueCard key={issue.id} issue={issue} onUpdate={handleIssueUpdate} />
             ))}
           </div>
         ) : (
-          <IssueTableView issues={issues} onUpdate={loadData} />
+          <IssueTableView issues={issues} onUpdate={handleIssueUpdate} />
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && issues.length > 0 && (
+          <div className="flex items-center justify-center gap-2 mt-8">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+            <div className="flex items-center gap-2">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+                
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setCurrentPage(pageNum)}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
+            <span className="text-sm text-muted-foreground ml-4">
+              Page {currentPage} of {totalPages} ({totalIssues} total)
+            </span>
+          </div>
         )}
 
         {issues.length === 0 && (

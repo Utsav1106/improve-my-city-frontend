@@ -7,35 +7,40 @@ interface StatusBadgeProps {
 export function StatusBadge({ status }: StatusBadgeProps) {
   const getStatusStyle = () => {
     switch (status) {
-      case 'Pending':
+      case 'open':
         return {
           container: 'bg-linear-to-r from-amber-500/15 to-orange-500/15 text-amber-700 dark:text-amber-300 backdrop-blur-sm',
           dot: 'bg-amber-500',
         };
-      case 'In Progress':
+      case 'in_progress':
         return {
           container: 'bg-linear-to-r from-blue-500/15 to-cyan-500/15 text-blue-700 dark:text-blue-300 backdrop-blur-sm',
           dot: 'bg-blue-500 animate-pulse',
         };
-      case 'Resolved':
+      case 'resolved':
         return {
           container: 'bg-linear-to-r from-green-500/15 to-emerald-500/15 text-green-700 dark:text-green-300 backdrop-blur-sm',
           dot: 'bg-green-500',
         };
-      case 'Rejected':
+      case 'closed':
         return {
           container: 'bg-linear-to-r from-red-500/15 to-rose-500/15 text-red-700 dark:text-red-300 backdrop-blur-sm',
           dot: 'bg-red-500',
         };
     }
   };
+  const statusNormalized = {
+    open: 'Open',
+    in_progress: 'In Progress',
+    resolved: 'Resolved',
+    closed: 'Closed'
+  }
 
   const styles = getStatusStyle();
-
   return (
     <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${styles.container}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${styles.dot}`}></span>
-      {status}
+      {statusNormalized[status] || status}
     </span>
   );
 }

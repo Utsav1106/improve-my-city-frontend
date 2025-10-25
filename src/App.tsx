@@ -11,6 +11,7 @@ import { ResolvedIssuesPage } from './pages/ResolvedIssuesPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import type { ReactNode } from 'react';
 import { useAuthStore } from './stores/authStore';
+import { Toaster } from 'react-hot-toast';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user } = useAuthStore();
@@ -50,6 +51,7 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <AppRoutes />
+        <Toaster position="top-right" />
       </AuthProvider>
     </BrowserRouter>
   );

@@ -16,6 +16,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Loader2, X, MapPin, Camera, AlertCircle } from "lucide-react";
+import toast from 'react-hot-toast';
 
 const categories: IssueCategory[] = [
   "Pothole",
@@ -70,6 +71,7 @@ export function ReportIssuePage() {
     longitude: -74.006,
   });
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [suggestions, setSuggestions] = useState<any[]>([]);
@@ -87,7 +89,10 @@ export function ReportIssuePage() {
     const files = e.target.files;
     if (!files) return;
 
-    Array.from(files).forEach((file) => {
+    const filesArray = Array.from(files);
+    setUploadedFiles((prev) => [...prev, ...filesArray]);
+
+    filesArray.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setUploadedImages((prev) => [...prev, reader.result as string]);
@@ -98,6 +103,7 @@ export function ReportIssuePage() {
 
   const removeImage = (index: number) => {
     setUploadedImages((prev) => prev.filter((_, i) => i !== index));
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const validate = () => {
@@ -120,11 +126,11 @@ export function ReportIssuePage() {
     setIsSubmitting(true);
 
     try {
-      const photos = uploadedImages.length > 0
-        ? uploadedImages
-        : [
-            "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800",
-          ];
+      // Upload images first if any
+      let photoUrls: string[] = [];
+      if (uploadedFiles.length > 0) {
+        photoUrls = await issuesAPI.uploadIssueImages(uploadedFiles);
+      }
 
       await issuesAPI.createIssue(
         formData.title,
@@ -136,15 +142,16 @@ export function ReportIssuePage() {
           latitude: formData.latitude,
           longitude: formData.longitude,
         },
-        photos,
+        photoUrls,
         user.id,
         user.name
       );
 
+      toast.success('Issue reported successfully!');
       navigate("/my-issues");
     } catch (error) {
       console.error("Failed to create issue:", error);
-      alert("Failed to submit issue. Please try again.");
+      toast.error("Failed to submit issue. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -152,7 +159,7 @@ export function ReportIssuePage() {
 
   const useCurrentLocation = () => {
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser.");
+      toast.error("Geolocation is not supported by your browser.");
       return;
     }
 
@@ -177,7 +184,7 @@ export function ReportIssuePage() {
       },
       (error) => {
         console.error("Error getting location:", error);
-        alert("Could not get your location. Please enter it manually.");
+        toast.error("Could not get your location. Please enter it manually.");
         setGpsDisabled(false);
       }
     );

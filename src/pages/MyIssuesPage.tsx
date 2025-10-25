@@ -219,6 +219,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Grid3x3, Table2, Trash2, Filter, Plus } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export function MyIssuesPage() {
   const { user } = useAuth();
@@ -267,7 +268,7 @@ export function MyIssuesPage() {
         case 'oldest':
           return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
         case 'popular':
-          return b.upvotes - a.upvotes;
+          return (b.upvotes || 0) - (a.upvotes || 0);
         default:
           return 0;
       }
@@ -281,18 +282,19 @@ export function MyIssuesPage() {
 
     try {
       await issuesAPI.deleteIssue(issueId, user.id);
-      loadIssues();
+      await loadIssues();
+      toast.success('Issue deleted successfully');
     } catch (error) {
       console.error('Failed to delete issue:', error);
-      alert('Failed to delete issue');
+      toast.error('Failed to delete issue');
     }
   };
 
   const stats = {
     all: issues.length,
-    pending: issues.filter((i) => i.status === 'Pending').length,
-    inProgress: issues.filter((i) => i.status === 'In Progress').length,
-    resolved: issues.filter((i) => i.status === 'Resolved').length,
+    pending: issues.filter((i) => i.status === 'open').length,
+    inProgress: issues.filter((i) => i.status === 'in_progress').length,
+    resolved: issues.filter((i) => i.status === 'resolved').length,
   };
 
   if (isLoading) {
@@ -324,30 +326,30 @@ export function MyIssuesPage() {
           </button>
 
           <button
-            onClick={() => setStatusFilter('Pending')}
-            className={`text-left transition-all ${statusFilter === 'Pending' ? 'scale-105' : ''}`}
+            onClick={() => setStatusFilter('open')}
+            className={`text-left transition-all ${statusFilter === 'open' ? 'scale-105' : ''}`}
           >
-            <Card className={`p-4 hover:shadow-lg transition-all ${statusFilter === 'Pending' ? 'ring-2 ring-yellow-500' : ''}`}>
+            <Card className={`p-4 hover:shadow-lg transition-all ${statusFilter === 'open' ? 'ring-2 ring-yellow-500' : ''}`}>
               <p className="text-2xl font-bold mb-1">{stats.pending}</p>
               <p className="text-xs font-medium text-muted-foreground uppercase">Pending</p>
             </Card>
           </button>
 
           <button
-            onClick={() => setStatusFilter('In Progress')}
-            className={`text-left transition-all ${statusFilter === 'In Progress' ? 'scale-105' : ''}`}
+            onClick={() => setStatusFilter('in_progress')}
+            className={`text-left transition-all ${statusFilter === 'in_progress' ? 'scale-105' : ''}`}
           >
-            <Card className={`p-4 hover:shadow-lg transition-all ${statusFilter === 'In Progress' ? 'ring-2 ring-purple-500' : ''}`}>
+            <Card className={`p-4 hover:shadow-lg transition-all ${statusFilter === 'in_progress' ? 'ring-2 ring-purple-500' : ''}`}>
               <p className="text-2xl font-bold mb-1">{stats.inProgress}</p>
               <p className="text-xs font-medium text-muted-foreground uppercase">In Progress</p>
             </Card>
           </button>
 
           <button
-            onClick={() => setStatusFilter('Resolved')}
-            className={`text-left transition-all ${statusFilter === 'Resolved' ? 'scale-105' : ''}`}
+            onClick={() => setStatusFilter('resolved')}
+            className={`text-left transition-all ${statusFilter === 'resolved' ? 'scale-105' : ''}`}
           >
-            <Card className={`p-4 hover:shadow-lg transition-all ${statusFilter === 'Resolved' ? 'ring-2 ring-green-500' : ''}`}>
+            <Card className={`p-4 hover:shadow-lg transition-all ${statusFilter === 'resolved' ? 'ring-2 ring-green-500' : ''}`}>
               <p className="text-2xl font-bold mb-1">{stats.resolved}</p>
               <p className="text-xs font-medium text-muted-foreground uppercase">Resolved</p>
             </Card>
@@ -430,8 +432,16 @@ export function MyIssuesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredIssues.map((issue) => (
                 <div key={issue.id} className="relative">
-                  <IssueCard issue={issue} onUpdate={loadIssues} />
-                  {issue.status === 'Pending' && (
+                  <IssueCard 
+                    issue={issue} 
+                    onUpdate={(updatedIssue) => {
+                      if (updatedIssue) {
+                        // Update locally without reload
+                        setIssues(prev => prev.map(i => i.id === updatedIssue.id ? updatedIssue : i));
+                      }
+                    }} 
+                  />
+                  {issue.status === 'open' && (
                     <Button
                       size="sm"
                       variant="destructive"
