@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { MapPin, Loader2, X, Camera } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   id: string;
@@ -461,7 +462,37 @@ export function Chatbot() {
                           : 'bg-primary text-primary-foreground rounded-tr-sm'
                       }`}
                     >
-                      <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-line">{message.text}</p>
+                      <div className="text-xs sm:text-sm leading-relaxed prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5">
+                        <ReactMarkdown
+                          components={{
+                            h1: ({node, ...props}) => <h1 className="text-base sm:text-lg font-bold mb-2" {...props} />,
+                            h2: ({node, ...props}) => <h2 className="text-sm sm:text-base font-bold mb-1.5" {...props} />,
+                            h3: ({node, ...props}) => <h3 className="text-xs sm:text-sm font-semibold mb-1" {...props} />,
+                            p: ({node, ...props}) => <p className="mb-1 last:mb-0" {...props} />,
+                            strong: ({node, ...props}) => <strong className="font-bold" {...props} />,
+                            em: ({node, ...props}) => <em className="italic" {...props} />,
+                            ul: ({node, ...props}) => <ul className="list-disc list-inside my-1 space-y-0.5" {...props} />,
+                            ol: ({node, ...props}) => <ol className="list-decimal list-inside my-1 space-y-0.5" {...props} />,
+                            li: ({node, ...props}) => <li className="ml-2" {...props} />,
+                            code: ({node, className, children, ...props}) => {
+                              const isInline = !className;
+                              return isInline ? (
+                                <code className="bg-muted/50 px-1 py-0.5 rounded text-xs" {...props}>
+                                  {children}
+                                </code>
+                              ) : (
+                                <code className="block bg-muted/50 p-2 rounded my-1 text-xs overflow-x-auto" {...props}>
+                                  {children}
+                                </code>
+                              );
+                            },
+                            a: ({node, ...props}) => <a className="underline hover:no-underline" target="_blank" rel="noopener noreferrer" {...props} />,
+                            blockquote: ({node, ...props}) => <blockquote className="border-l-2 border-muted-foreground/30 pl-2 italic my-1" {...props} />,
+                          }}
+                        >
+                          {message.text}
+                        </ReactMarkdown>
+                      </div>
                     </div>
                     <p className={`text-xs mt-1 px-1 ${message.isBot ? 'text-muted-foreground' : 'text-muted-foreground text-right'}`}>
                       {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
