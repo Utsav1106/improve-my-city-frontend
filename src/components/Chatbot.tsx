@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { MapPin, Loader2, X, Camera } from 'lucide-react';
+import { RiMapPin2Line, RiLoader4Line, RiCloseLine, RiCameraLine } from 'react-icons/ri';
 import ReactMarkdown from 'react-markdown';
 
 interface Message {
@@ -54,7 +54,7 @@ export function Chatbot() {
     title?: string;
     description?: string;
     category?: IssueCategory;
-    priority?: 'Low' | 'Medium' | 'High';
+    priority?: 'low' | 'medium' | 'high';
     location?: { address: string; latitude: number; longitude: number };
   };
   const [issueData, setIssueData] = useState<IssueChatData>({});
@@ -69,6 +69,7 @@ export function Chatbot() {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const debounceTimer = useRef<number | null>(null);
 
   // Load messages from localStorage on mount
   useEffect(() => {
@@ -105,6 +106,15 @@ export function Chatbot() {
       inputRef.current.focus();
     }
   }, [isOpen]);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, []);
 
   const clearHistory = () => {
     if (user) {
@@ -203,15 +213,24 @@ export function Chatbot() {
       return;
     }
 
-    setIsLoadingSuggestions(true);
-    try {
-      const results = await fetchLocationSuggestions(val);
-      setLocationSuggestions(results);
-    } catch (error) {
-      console.error("Error fetching suggestions:", error);
-    } finally {
-      setIsLoadingSuggestions(false);
+    // Clear existing timer
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
     }
+
+    setIsLoadingSuggestions(true);
+
+    // Set new timer with 500ms delay
+    debounceTimer.current = window.setTimeout(async () => {
+      try {
+        const results = await fetchLocationSuggestions(val);
+        setLocationSuggestions(results);
+      } catch (error) {
+        console.error("Error fetching suggestions:", error);
+      } finally {
+        setIsLoadingSuggestions(false);
+      }
+    }, 500);
   };
 
   const selectLocationSuggestion = (place: any) => {
@@ -298,7 +317,7 @@ export function Chatbot() {
         issueData.title,
         issueData.description,
         issueData.category,
-        issueData.priority || 'Medium',
+        issueData.priority || 'medium',
         issueData.location,
         photoUrls,
         user?.id || '',
@@ -624,16 +643,16 @@ export function Chatbot() {
                 <div className="space-y-1">
                   <Label className="text-xs">Priority</Label>
                   <Select
-                    value={issueData.priority || 'Medium'}
-                    onValueChange={(val) => setIssueData(prev => ({ ...prev, priority: val as 'Low' | 'Medium' | 'High' }))}
+                    value={issueData.priority || 'medium'}
+                    onValueChange={(val) => setIssueData(prev => ({ ...prev, priority: val as 'low' | 'medium' | 'high' }))}
                   >
                     <SelectTrigger className="h-9 text-sm">
                       <SelectValue placeholder="Select priority" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Low">Low</SelectItem>
-                      <SelectItem value="Medium">Medium</SelectItem>
-                      <SelectItem value="High">High</SelectItem>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -660,7 +679,7 @@ export function Chatbot() {
                             onClick={() => selectLocationSuggestion(place)}
                           >
                             <div className="flex items-start gap-2">
-                              <MapPin className="w-3 h-3 mt-0.5 text-muted-foreground shrink-0" />
+                              <RiMapPin2Line className="w-3 h-3 mt-0.5 text-muted-foreground shrink-0" />
                               <span className="line-clamp-2">{place.display_name}</span>
                             </div>
                           </button>
@@ -671,7 +690,7 @@ export function Chatbot() {
                     {isLoadingSuggestions && (
                       <div className="absolute bottom-full left-0 right-0 mb-1 bg-card border border-border rounded-lg shadow-lg p-3 z-50">
                         <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <RiLoader4Line className="w-3 h-3 animate-spin" />
                           Searching...
                         </div>
                       </div>
@@ -686,7 +705,7 @@ export function Chatbot() {
                     disabled={isGettingLocation}
                     className="h-7 text-xs mt-1"
                   >
-                    <MapPin className="w-3 h-3 mr-1" />
+                    <RiMapPin2Line className="w-3 h-3 mr-1" />
                     {isGettingLocation ? 'Getting location...' : 'Use current location'}
                   </Button>
                 </div>
@@ -705,7 +724,7 @@ export function Chatbot() {
                     />
                     <label htmlFor="chatbot-image-upload" className="cursor-pointer">
                       <div className="flex flex-col items-center gap-2">
-                        <Camera className="w-5 h-5 text-primary" />
+                        <RiCameraLine className="w-5 h-5 text-primary" />
                         <p className="text-xs text-muted-foreground">
                           Click to upload
                         </p>
@@ -728,7 +747,7 @@ export function Chatbot() {
                             onClick={() => removeImage(index)}
                             className="absolute top-1 right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                           >
-                            <X className="w-3 h-3" />
+                            <RiCloseLine className="w-3 h-3" />
                           </button>
                         </div>
                       ))}

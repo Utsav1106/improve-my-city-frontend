@@ -9,8 +9,7 @@ export function Preloader() {
         </div>
 
         {/* Loading text */}
-        <p className="text-lg font-semibold text-foreground/90 mb-2">Loading Dashboard</p>
-        <p className="text-sm text-muted-foreground">Please wait...</p>
+        <p className="text-lg font-semibold text-foreground/90 mb-2">Please wait...</p>
       </div>
     </div>
   );

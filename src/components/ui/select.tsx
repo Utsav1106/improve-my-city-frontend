@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import * as SelectPrimitive from "@radix-ui/react-select"
-import { Check, ChevronDown, ChevronUp } from "lucide-react"
+import { RiCheckLine, RiArrowDownSLine, RiArrowUpSLine } from "react-icons/ri"
 
 import { cn } from "@/utils/helpers"
 
@@ -39,11 +39,11 @@ function SelectTrigger({
       className={cn(
         "group relative w-full cursor-pointer flex items-center justify-between gap-3 rounded-lg text-sm font-medium outline-none transition-colors duration-200",
         "data-[size=default]:h-10 data-[size=default]:px-4 data-[size=sm]:h-9 data-[size=sm]:px-3",
-        "bg-input text-foreground border border-input",
+        "bg-input/20 text-foreground border border-input",
         "hover:bg-accent hover:border-ring",
         "data-[state=open]:bg-accent data-[state=open]:border-ring",
         "disabled:cursor-not-allowed disabled:opacity-50",
-        "data-[placeholder]:text-muted-foreground",
+  "data-placeholder:text-muted-foreground",
         "aria-invalid:border-destructive aria-invalid:focus:border-destructive",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         "[&_svg:not([class*='text-'])]:text-muted-foreground group-hover:[&_svg:not([class*='text-'])]:text-foreground",
@@ -54,7 +54,7 @@ function SelectTrigger({
     >
       {children}
       <SelectPrimitive.Icon asChild>
-        <ChevronDown className="size-4 opacity-60 transition-transform duration-200 group-data-[state=open]:rotate-180 group-hover:opacity-80" />
+        <RiArrowDownSLine className="size-4 opacity-60 transition-transform duration-200 group-data-[state=open]:rotate-180 group-hover:opacity-80" />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   )
@@ -124,13 +124,13 @@ function SelectItem({
       data-slot="select-item"
       className={cn(
         "group relative flex flex-wrap w-full cursor-pointer items-center gap-3 rounded-lg py-2 pl-3 pr-10 text-sm font-medium outline-none select-none transition-colors duration-150",
-        "data-[disabled]:pointer-events-none data-[disabled]:opacity-40",
+  "data-disabled:pointer-events-none data-disabled:opacity-40",
         "text-muted-foreground",
-        "data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
+  "data-highlighted:bg-accent data-highlighted:text-accent-foreground",
         "data-[state=checked]:text-accent-foreground",
         "data-[state=checked]:font-semibold",
-        "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        "[&_svg:not([class*='text-'])]:text-muted-foreground group-data-[highlighted]:[&_svg:not([class*='text-'])]:text-accent-foreground",
+  "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "[&_svg:not([class*='text-'])]:text-muted-foreground group-data-highlighted:[&_svg:not([class*='text-'])]:text-accent-foreground",
         "*:data-[slot=item-text]:flex *:data-[slot=item-text]:items-center *:data-[slot=item-text]:gap-2",
         className
       )}
@@ -138,7 +138,7 @@ function SelectItem({
     >
       <span className="absolute right-3 flex size-4 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
-          <Check className="size-4 text-foreground font-bold" />
+          <RiCheckLine className="size-4 text-foreground font-bold" />
         </SelectPrimitive.ItemIndicator>
       </span>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
@@ -172,7 +172,7 @@ function SelectScrollUpButton({
       )}
       {...props}
     >
-      <ChevronUp className="size-4" />
+      <RiArrowUpSLine className="size-4" />
     </SelectPrimitive.ScrollUpButton>
   )
 }
@@ -190,7 +190,7 @@ function SelectScrollDownButton({
       )}
       {...props}
     >
-      <ChevronDown className="size-4" />
+      <RiArrowDownSLine className="size-4" />
     </SelectPrimitive.ScrollDownButton>
   )
 }

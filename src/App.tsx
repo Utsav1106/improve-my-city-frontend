@@ -9,6 +9,7 @@ import { ReportIssuePage } from './pages/ReportIssuePage';
 import { MyIssuesPage } from './pages/MyIssuesPage';
 import { ResolvedIssuesPage } from './pages/ResolvedIssuesPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
+import { LeaderboardPage } from './pages/LeaderboardPage';
 import type { ReactNode } from 'react';
 import { useAuthStore } from './stores/authStore';
 import { Toaster } from 'react-hot-toast';
@@ -37,6 +38,7 @@ function AppRoutes() {
         <Route path="/report" element={<ProtectedRoute><ReportIssuePage /></ProtectedRoute>} />
         <Route path="/my-issues" element={<ProtectedRoute><MyIssuesPage /></ProtectedRoute>} />
         <Route path="/resolved" element={<ProtectedRoute><ResolvedIssuesPage /></ProtectedRoute>} />
+        <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminDashboardPage /></ProtectedRoute>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />

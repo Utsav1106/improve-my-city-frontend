@@ -10,7 +10,7 @@ interface LocationFilter {
   longitude: number | null;
 }
 
-interface UIStore {
+interface FilterStore {
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
   
@@ -29,7 +29,7 @@ const defaultLocationFilter: LocationFilter = {
   longitude: null,
 };
 
-export const useUIStore = create<UIStore>()(
+export const useFilterStore = create<FilterStore>()(
   persist(
     (set) => ({
       viewMode: 'grid',

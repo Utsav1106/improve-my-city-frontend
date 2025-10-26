@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { RiLoader4Line } from 'react-icons/ri';
 import { useAuthStore } from '@/stores/authStore';
 
 export function LoginPage() {
@@ -29,19 +29,6 @@ export function LoginPage() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setError('');
-    setIsLoading(true);
-
-    try {
-      // await loginWithGoogle();
-      navigate('/');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to login with Google');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
@@ -66,8 +53,8 @@ export function LoginPage() {
 
             <div className="bg-accent/30 border border-border text-foreground px-4 py-3 rounded-lg text-sm">
               <p className="font-semibold mb-1">Demo credentials:</p>
-              <p>Admin: admin@city.com (any password)</p>
-              <p>User: john@example.com (any password)</p>
+              <p>Admin: admin@city.com (password - Admin@City)</p>
+              <p>User: citizen@city.com (password - Citizen@City)</p>
             </div>
 
             <div className="space-y-2">
@@ -95,11 +82,11 @@ export function LoginPage() {
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign In'}
+              {isLoading ? <RiLoader4Line className="h-4 w-4 animate-spin" /> : 'Sign In'}
             </Button>
           </form>
 
-          <div className="mt-6">
+          {/* <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300"></div>
@@ -115,7 +102,7 @@ export function LoginPage() {
                 variant="outline"
                 className="w-full"
                 onClick={handleGoogleLogin}
-                disabled={isLoading}
+                disabled
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -126,7 +113,7 @@ export function LoginPage() {
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign in with Google'}
               </Button>
             </div>
-          </div>
+          </div> */}
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Don't have an account?{' '}

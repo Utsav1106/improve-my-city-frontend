@@ -6,11 +6,11 @@ import type { Issue, IssueStatus, IssueCategory } from '../types';
 import { IssueCard } from '../components/IssueCard';
 import { IssueTableView } from '../components/IssueTableView';
 import { Preloader } from '../components/Preloader';
-import { useUIStore } from '../stores/uiStore';
+import { useFilterStore } from '../stores/uiStore';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Grid3x3, Table2, Trash2, Filter, Plus } from 'lucide-react';
+import { RiGridFill, RiTableLine, RiDeleteBinLine, RiFilter3Line, RiAddLine } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 
 export function MyIssuesPage() {
@@ -22,7 +22,7 @@ export function MyIssuesPage() {
   const [categoryFilter, setCategoryFilter] = useState<IssueCategory | 'All'>('All');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'popular'>('newest');
 
-  const { viewMode, setViewMode } = useUIStore();
+  const { viewMode, setViewMode } = useFilterStore();
 
   const loadIssues = async () => {
     if (!user) return;
@@ -152,7 +152,7 @@ export function MyIssuesPage() {
         <Card className="p-4 mb-6 bg-card/50 backdrop-blur-sm">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
-              <Filter className="w-5 h-5 text-muted-foreground" />
+              <RiFilter3Line className="w-5 h-5 text-muted-foreground" />
               <span className="font-semibold">Filters</span>
             </div>
 
@@ -163,10 +163,10 @@ export function MyIssuesPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="All">All Statuses</SelectItem>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="In Progress">In Progress</SelectItem>
-                  <SelectItem value="Resolved">Resolved</SelectItem>
-                  <SelectItem value="Closed">Closed</SelectItem>
+                  <SelectItem value="open">Open</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="resolved">Resolved</SelectItem>
+                  <SelectItem value="closed">Closed</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -205,14 +205,14 @@ export function MyIssuesPage() {
                 variant={viewMode === 'grid' ? 'default' : 'ghost'}
                 onClick={() => setViewMode('grid')}
               >
-                <Grid3x3 className="w-4 h-4" />
+                <RiGridFill className="w-4 h-4" />
               </Button>
               <Button
                 size="sm"
                 variant={viewMode === 'table' ? 'default' : 'ghost'}
                 onClick={() => setViewMode('table')}
               >
-                <Table2 className="w-4 h-4" />
+                <RiTableLine className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -240,7 +240,7 @@ export function MyIssuesPage() {
                       className="absolute top-4 right-4 z-10 shadow-lg"
                       onClick={() => handleDeleteIssue(issue.id)}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <RiDeleteBinLine className="w-4 h-4" />
                     </Button>
                   )}
                 </div>
@@ -258,7 +258,7 @@ export function MyIssuesPage() {
                 </svg>
               </div>
               <h3 className="text-xl sm:text-2xl font-bold mb-3">
-                {issues.length === 0 ? "You haven't reported any issues yet" : 'No issues match your filters'}
+                {issues.length === 0 ? "There are no issues" : 'No issues match your filters'}
               </h3>
               <p className="text-muted-foreground mb-6 text-sm sm:text-base">
                 {issues.length === 0
@@ -268,7 +268,7 @@ export function MyIssuesPage() {
               {issues.length === 0 && (
                 <Link to="/report">
                   <Button size="lg" className="font-semibold">
-                    <Plus className="w-5 h-5 mr-2" />
+                    <RiAddLine className="w-5 h-5 mr-2" />
                     Report New Issue
                   </Button>
                 </Link>

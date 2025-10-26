@@ -46,13 +46,13 @@ export function StatusBadge({ status }: StatusBadgeProps) {
 }
 
 interface PriorityBadgeProps {
-  priority: 'Low' | 'Medium' | 'High';
+  priority: 'low' | 'medium' | 'high';
 }
 
 export function PriorityBadge({ priority }: PriorityBadgeProps) {
   const getPriorityStyle = () => {
     switch (priority) {
-      case 'Low':
+      case 'low':
         return {
           container: 'bg-linear-to-r from-slate-500/15 to-gray-500/15 text-slate-700 dark:text-slate-300 backdrop-blur-sm',
           icon: (
@@ -61,7 +61,7 @@ export function PriorityBadge({ priority }: PriorityBadgeProps) {
             </svg>
           ),
         };
-      case 'Medium':
+      case 'medium':
         return {
           container: 'bg-linear-to-r from-yellow-500/15 to-amber-500/15 text-yellow-700 dark:text-yellow-300 backdrop-blur-sm',
           icon: (
@@ -70,7 +70,7 @@ export function PriorityBadge({ priority }: PriorityBadgeProps) {
             </svg>
           ),
         };
-      case 'High':
+      case 'high':
         return {
           container: 'bg-linear-to-r from-red-500/15 to-pink-500/15 text-red-700 dark:text-red-300 backdrop-blur-sm',
           icon: (
@@ -82,12 +82,13 @@ export function PriorityBadge({ priority }: PriorityBadgeProps) {
     }
   };
 
+  
   const styles = getPriorityStyle();
-
+  const priorityNormalized = priority.charAt(0).toUpperCase() + priority.slice(1);
   return (
     <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${styles.container}`}>
       {styles.icon}
-      {priority}
+      {priorityNormalized}
     </span>
   );
 }

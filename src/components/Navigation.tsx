@@ -4,7 +4,6 @@ import ThemeSwitcher from '@/components/ThemeSwitcher';
 import { Button } from '@/components/ui/button';
 import { useMemo, useState } from 'react';
 import {
-  RiHomeLine,
   RiFileAddLine,
   RiFileListLine,
   RiCheckboxCircleLine,
@@ -13,6 +12,7 @@ import {
   RiCloseLine,
   RiLogoutBoxRLine,
   RiLoginBoxLine,
+  RiTrophyLine,
 } from 'react-icons/ri';
 
 export function Navigation() {
@@ -26,10 +26,10 @@ export function Navigation() {
   const navItems = useMemo(
     () =>
       [
-        { to: '/', label: 'Dashboard' },
         { to: '/report', label: 'Report Issue' },
         { to: '/my-issues', label: 'My Issues' },
         { to: '/resolved', label: 'Resolved' },
+        { to: '/leaderboard', label: 'Leaderboard' },
         ...(user?.isAdmin ? [{ to: '/admin', label: 'Admin' }] : []),
       ] as { to: string; label: string }[],
     [user?.isAdmin]
@@ -38,10 +38,10 @@ export function Navigation() {
   const mobileNavItems = useMemo(
     () =>
       [
-        { to: '/', label: 'Dashboard', icon: RiHomeLine },
         { to: '/report', label: 'Report Issue', icon: RiFileAddLine },
         { to: '/my-issues', label: 'My Issues', icon: RiFileListLine },
         { to: '/resolved', label: 'Resolved', icon: RiCheckboxCircleLine },
+        { to: '/leaderboard', label: 'Leaderboard', icon: RiTrophyLine },
         ...(user?.isAdmin ? [{ to: '/admin', label: 'Admin', icon: RiShieldStarLine }] : []),
       ] as { to: string; label: string; icon: any }[],
     [user?.isAdmin]

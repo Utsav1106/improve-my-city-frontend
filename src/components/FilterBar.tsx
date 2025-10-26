@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { useUIStore } from '../stores/uiStore';
+import { useState, useEffect, useRef } from 'react';
+import { useFilterStore } from '../stores/uiStore';
 import { Button } from '@/components/ui/button';
-import { Grid3x3, Table2, Search, X, MapPin, Loader2 } from 'lucide-react';
+import { RiGridFill, RiTableLine, RiSearchLine, RiCloseLine, RiMapPin2Line, RiLoader4Line } from 'react-icons/ri';
 import type { IssueCategory } from '../types';
 import toast from 'react-hot-toast';
+import { Input } from './ui/input';
 
 const categories: (IssueCategory | 'All')[] = [
     'All',
@@ -55,12 +56,22 @@ export function FilterBar() {
         locationFilter,
         setLocationFilter,
         resetFilters
-    } = useUIStore();
+    } = useFilterStore();
 
     const [locationInput, setLocationInput] = useState(locationFilter.query);
     const [isGeocoding, setIsGeocoding] = useState(false);
     const [suggestions, setSuggestions] = useState<any[]>([]);
     const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+    const debounceTimer = useRef<number | null>(null);
+
+    // Cleanup debounce timer on unmount
+    useEffect(() => {
+        return () => {
+            if (debounceTimer.current) {
+                clearTimeout(debounceTimer.current);
+            }
+        };
+    }, []);
 
     const handleLocationSearch = async () => {
         if (!locationInput.trim()) {
@@ -134,7 +145,7 @@ export function FilterBar() {
         );
     };
 
-    // Handle location input with suggestions
+    // Handle location input with suggestions and debounce
     const handleLocationInput = async (val: string) => {
         setLocationInput(val);
 
@@ -143,15 +154,24 @@ export function FilterBar() {
             return;
         }
 
-        setIsLoadingSuggestions(true);
-        try {
-            const results = await fetchLocationSuggestions(val);
-            setSuggestions(results);
-        } catch (error) {
-            console.error("Error fetching suggestions:", error);
-        } finally {
-            setIsLoadingSuggestions(false);
+        // Clear existing timer
+        if (debounceTimer.current) {
+            clearTimeout(debounceTimer.current);
         }
+
+        setIsLoadingSuggestions(true);
+
+        // Set new timer with 500ms delay
+        debounceTimer.current = window.setTimeout(async () => {
+            try {
+                const results = await fetchLocationSuggestions(val);
+                setSuggestions(results);
+            } catch (error) {
+                console.error("Error fetching suggestions:", error);
+            } finally {
+                setIsLoadingSuggestions(false);
+            }
+        }, 500);
     };
 
     const selectSuggestion = (place: any) => {
@@ -178,7 +198,7 @@ export function FilterBar() {
                         onClick={() => setViewMode('grid')}
                         className="gap-2"
                     >
-                        <Grid3x3 className="w-4 h-4" />
+                        <RiGridFill className="w-4 h-4" />
                     </Button>
                     <Button
                         size="sm"
@@ -186,7 +206,7 @@ export function FilterBar() {
                         onClick={() => setViewMode('table')}
                         className="gap-2"
                     >
-                        <Table2 className="w-4 h-4" />
+                        <RiTableLine className="w-4 h-4" />
                     </Button>
                 </div>
                 <div className="flex items-center gap-2">
@@ -197,7 +217,7 @@ export function FilterBar() {
                             onClick={handleResetFilters}
                             className="text-muted-foreground hover:text-foreground"
                         >
-                            <X className="w-4 h-4 mr-1" />
+                            <RiCloseLine className="w-4 h-4 mr-1" />
                             Clear all
                         </Button>
                     )}
@@ -238,21 +258,21 @@ export function FilterBar() {
                     <div className="relative">
                         <div className="flex gap-2 mb-2">
                             <div className="relative flex-1">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                <input
+                                <RiSearchLine className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <Input
                                     type="text"
                                     value={locationInput}
                                     onChange={(e) => handleLocationInput(e.target.value)}
                                     onKeyPress={(e) => e.key === 'Enter' && handleLocationSearch()}
                                     placeholder="Enter address, city, or area..."
-                                    className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:border-ring transition-all"
+                                    className="w-full pl-10 pr-10 py-2.5 rounded-lg"
                                 />
                                 {locationInput && (
                                     <button
                                         onClick={handleClearLocation}
                                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                     >
-                                        <X className="w-4 h-4" />
+                                        <RiCloseLine className="w-4 h-4" />
                                     </button>
                                 )}
                             </div>
@@ -263,12 +283,12 @@ export function FilterBar() {
                             >
                                 {isGeocoding ? (
                                     <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <RiLoader4Line className="w-4 h-4 animate-spin" />
                                         Searching...
                                     </>
                                 ) : (
                                     <>
-                                        <Search className="w-4 h-4" />
+                                        <RiSearchLine className="w-4 h-4" />
                                         Search
                                     </>
                                 )}
@@ -286,7 +306,7 @@ export function FilterBar() {
                                         onClick={() => selectSuggestion(place)}
                                     >
                                         <div className="flex items-start gap-2">
-                                            <MapPin className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+                                            <RiMapPin2Line className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
                                             <span className="line-clamp-2">{place.display_name}</span>
                                         </div>
                                     </button>
@@ -297,7 +317,7 @@ export function FilterBar() {
                         {isLoadingSuggestions && (
                             <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg p-4 z-50">
                                 <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    <RiLoader4Line className="w-4 h-4 animate-spin" />
                                     Searching locations...
                                 </div>
                             </div>
@@ -309,7 +329,7 @@ export function FilterBar() {
                             disabled={isGeocoding}
                             className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <MapPin className="w-3 h-3" />
+                            <RiMapPin2Line className="w-3 h-3" />
                             Use my current location
                         </button>
                     </div>

@@ -4,15 +4,15 @@ import type { Issue } from '../types';
 import { IssueCard } from '../components/IssueCard';
 import { IssueTableView } from '../components/IssueTableView';
 import { Preloader } from '../components/Preloader';
-import { useUIStore } from '../stores/uiStore';
+import { useFilterStore } from '../stores/uiStore';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Grid3x3, Table2, CheckCircle2, Award } from 'lucide-react';
+import { RiGridFill, RiTableLine, RiCheckboxCircleFill, RiMedalLine } from 'react-icons/ri';
 
 export function ResolvedIssuesPage() {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { viewMode, setViewMode } = useUIStore();
+  const { viewMode, setViewMode } = useFilterStore();
 
   const loadIssues = async () => {
     setIsLoading(true);
@@ -41,7 +41,7 @@ export function ResolvedIssuesPage() {
         <div className="relative overflow-hidden rounded-3xl p-8 sm:p-10 lg:p-12 mb-8 shadow-2xl bg-linear-to-br from-green-600 via-green-500 to-emerald-600 text-white">
           <div className="relative z-10">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-4 rounded-full bg-white/20 backdrop-blur-sm border border-white/30">
-              <CheckCircle2 className="w-4 h-4" />
+              <RiCheckboxCircleFill className="w-4 h-4" />
               <span className="text-sm font-medium">Success Stories</span>
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 tracking-tight">
@@ -53,7 +53,7 @@ export function ResolvedIssuesPage() {
             <div className="flex items-center gap-8">
               <div className="flex items-center gap-3">
                 <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                  <Award className="w-7 h-7" />
+                  <RiMedalLine className="w-7 h-7" />
                 </div>
                 <div>
                   <p className="text-3xl font-bold">{issues.length}</p>
@@ -101,14 +101,14 @@ export function ResolvedIssuesPage() {
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
               onClick={() => setViewMode('grid')}
             >
-              <Grid3x3 className="w-4 h-4" />
+              <RiGridFill className="w-4 h-4" />
             </Button>
             <Button
               size="sm"
               variant={viewMode === 'table' ? 'default' : 'ghost'}
               onClick={() => setViewMode('table')}
             >
-              <Table2 className="w-4 h-4" />
+              <RiTableLine className="w-4 h-4" />
             </Button>
           </div>
         </div>
@@ -121,7 +121,7 @@ export function ResolvedIssuesPage() {
                 <div key={issue.id} className="relative">
                   <div className="absolute -top-2 -right-2 z-10">
                     <div className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg bg-green-500 text-white">
-                      <CheckCircle2 className="w-6 h-6" />
+                      <RiCheckboxCircleFill className="w-6 h-6" />
                     </div>
                   </div>
                   <IssueCard issue={issue} onUpdate={loadIssues} showActions={false} />
@@ -135,7 +135,7 @@ export function ResolvedIssuesPage() {
           <Card className="text-center py-16 sm:py-20 px-6 bg-card/30 backdrop-blur-sm">
             <div className="max-w-md mx-auto">
               <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-6 rounded-full bg-green-500/10 flex items-center justify-center">
-                <CheckCircle2 className="w-10 h-10 sm:w-12 sm:h-12 text-green-600 dark:text-green-400" />
+                <RiCheckboxCircleFill className="w-10 h-10 sm:w-12 sm:h-12 text-green-600 dark:text-green-400" />
               </div>
               <h3 className="text-xl sm:text-2xl font-bold mb-3">No resolved issues yet</h3>
               <p className="text-muted-foreground text-sm sm:text-base">

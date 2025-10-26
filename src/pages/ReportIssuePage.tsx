@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../providers/AuthProvider";
 import { issuesAPI } from "../api/issues";
@@ -15,7 +15,7 @@ import {
   SelectValue,
   SelectItem,
 } from "@/components/ui/select";
-import { Loader2, X, MapPin, Camera, AlertCircle } from "lucide-react";
+import { RiLoader4Line, RiCloseLine, RiMapPin2Line, RiCameraLine, RiAlertLine } from "react-icons/ri";
 import toast from 'react-hot-toast';
 
 const categories: IssueCategory[] = [
@@ -65,7 +65,7 @@ export function ReportIssuePage() {
     title: "",
     description: "",
     category: "Pothole" as IssueCategory,
-    priority: "Medium" as "Low" | "Medium" | "High",
+    priority: "medium" as "low" | "medium" | "high",
     address: "",
     latitude: 40.7128,
     longitude: -74.006,
@@ -77,6 +77,16 @@ export function ReportIssuePage() {
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [gpsDisabled, setGpsDisabled] = useState(false);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const debounceTimer = useRef<number | null>(null);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, []);
 
   const handleChange = (field: string, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -131,7 +141,7 @@ export function ReportIssuePage() {
       if (uploadedFiles.length > 0) {
         photoUrls = await issuesAPI.uploadIssueImages(uploadedFiles);
       }
-
+      
       await issuesAPI.createIssue(
         formData.title,
         formData.description,
@@ -170,7 +180,7 @@ export function ReportIssuePage() {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
         const address = await getHumanReadableLocation(lat, lng);
-        
+
         setFormData((prev) => ({
           ...prev,
           latitude: lat,
@@ -178,7 +188,7 @@ export function ReportIssuePage() {
           address: address,
         }));
         setSuggestions([]);
-        
+
         // Re-enable GPS button after 2 seconds
         setTimeout(() => setGpsDisabled(false), 2000);
       },
@@ -190,24 +200,33 @@ export function ReportIssuePage() {
     );
   };
 
-  // Handle location input with debounce-like behavior
+  // Handle location input with debounce
   const handleLocationInput = async (val: string) => {
     handleChange("address", val);
-    
+
     if (val.length < 3) {
       setSuggestions([]);
       return;
     }
 
-    setIsLoadingSuggestions(true);
-    try {
-      const results = await fetchLocationSuggestions(val);
-      setSuggestions(results);
-    } catch (error) {
-      console.error("Error fetching suggestions:", error);
-    } finally {
-      setIsLoadingSuggestions(false);
+    // Clear existing timer
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
     }
+
+    setIsLoadingSuggestions(true);
+
+    // Set new timer with 500ms delay
+    debounceTimer.current = window.setTimeout(async () => {
+      try {
+        const results = await fetchLocationSuggestions(val);
+        setSuggestions(results);
+      } catch (error) {
+        console.error("Error fetching suggestions:", error);
+      } finally {
+        setIsLoadingSuggestions(false);
+      }
+    }, 500);
   };
 
   const selectSuggestion = (place: any) => {
@@ -249,7 +268,7 @@ export function ReportIssuePage() {
               />
               {errors.title && (
                 <div className="flex items-center gap-2 text-sm text-destructive">
-                  <AlertCircle className="w-4 h-4" />
+                  <RiAlertLine className="w-4 h-4" />
                   {errors.title}
                 </div>
               )}
@@ -270,7 +289,7 @@ export function ReportIssuePage() {
               />
               {errors.description && (
                 <div className="flex items-center gap-2 text-sm text-destructive">
-                  <AlertCircle className="w-4 h-4" />
+                  <RiAlertLine className="w-4 h-4" />
                   {errors.description}
                 </div>
               )}
@@ -307,9 +326,9 @@ export function ReportIssuePage() {
                     <SelectValue placeholder="Select priority" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Low">Low</SelectItem>
-                    <SelectItem value="Medium">Medium</SelectItem>
-                    <SelectItem value="High">High</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -319,25 +338,26 @@ export function ReportIssuePage() {
             <div className="space-y-2">
               <Label className="text-base font-semibold">Location</Label>
               <div className="relative">
-                <div className="flex gap-2">
-                  <Input
-                    value={formData.address}
-                    onChange={(e) => handleLocationInput(e.target.value)}
-                    placeholder="Enter address or location"
-                    required
-                    className="flex-1 h-12 text-base"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={useCurrentLocation}
-                    disabled={gpsDisabled}
-                    className="h-12 px-4"
-                  >
-                    <MapPin className="w-5 h-5 mr-2" />
-                    {gpsDisabled ? "Loading..." : "Use GPS"}
-                  </Button>
-                </div>
+                <Input
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) => handleLocationInput(e.target.value)}
+                  placeholder="Enter address or location"
+                  required
+                  className="w-full py-2.5 h-12"
+                  aria-invalid={!!errors.address}
+                />
+
+                {/* Use Current Location Button */}
+                <button
+                  type="button"
+                  onClick={useCurrentLocation}
+                  disabled={gpsDisabled}
+                  className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                >
+                  <RiMapPin2Line className="w-3 h-3" />
+                  Use my current location
+                </button>
 
                 {/* Location Suggestions Dropdown */}
                 {suggestions.length > 0 && (
@@ -350,7 +370,7 @@ export function ReportIssuePage() {
                         onClick={() => selectSuggestion(place)}
                       >
                         <div className="flex items-start gap-2">
-                          <MapPin className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+                          <RiMapPin2Line className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
                           <span className="line-clamp-2">{place.display_name}</span>
                         </div>
                       </button>
@@ -361,19 +381,15 @@ export function ReportIssuePage() {
                 {isLoadingSuggestions && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg p-4 z-50">
                     <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <RiLoader4Line className="w-4 h-4 animate-spin" />
                       Searching locations...
                     </div>
                   </div>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                Coordinates: {formData.latitude.toFixed(4)}, {formData.longitude.toFixed(4)}
-              </p>
               {errors.address && (
                 <div className="flex items-center gap-2 text-sm text-destructive">
-                  <AlertCircle className="w-4 h-4" />
+                  <RiAlertLine className="w-4 h-4" />
                   {errors.address}
                 </div>
               )}
@@ -394,7 +410,7 @@ export function ReportIssuePage() {
                 <label htmlFor="image-upload" className="cursor-pointer">
                   <div className="flex flex-col items-center gap-3">
                     <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Camera className="w-8 h-8 text-primary" />
+                      <RiCameraLine className="w-8 h-8 text-primary" />
                     </div>
                     <div>
                       <p className="text-base font-medium text-foreground mb-1">
@@ -423,7 +439,7 @@ export function ReportIssuePage() {
                         onClick={() => removeImage(index)}
                         className="absolute top-2 right-2 w-8 h-8 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                       >
-                        <X className="w-4 h-4" />
+                        <RiCloseLine className="w-4 h-4" />
                       </button>
                     </div>
                   ))}
@@ -461,14 +477,14 @@ export function ReportIssuePage() {
 
             {/* Submit Buttons */}
             <div className="flex gap-4 pt-4">
-              <Button 
-                type="submit" 
-                className="flex-1 h-12 text-base font-semibold" 
+              <Button
+                type="submit"
+                className="flex-1 h-12 text-base font-semibold"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
                   <span className="inline-flex items-center gap-2">
-                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <RiLoader4Line className="h-5 w-5 animate-spin" />
                     Submitting...
                   </span>
                 ) : (

@@ -24,7 +24,11 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [navigate])
 
 
-  if (isLoading) return <Preloader />
+  if (isLoading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Preloader />
+    </div>
+  )
   return <>
     {children}
   </>

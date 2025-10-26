@@ -6,10 +6,10 @@ import { IssueCard } from '../components/IssueCard';
 import { IssueTableView } from '../components/IssueTableView';
 import { FilterBar } from '../components/FilterBar';
 import { Preloader } from '../components/Preloader';
-import { useUIStore } from '../stores/uiStore';
+import { useFilterStore } from '../stores/uiStore';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { TrendingUp } from 'lucide-react';
+import { RiLineChartLine } from 'react-icons/ri';
 
 export function DashboardPage() {
   const [issues, setIssues] = useState<Issue[]>([]);
@@ -18,9 +18,9 @@ export function DashboardPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalIssues, setTotalIssues] = useState(0);
-  const limit = 12; // Issues per page
-  
-  const { viewMode, categoryFilter, locationFilter } = useUIStore();
+  const limit = 12;
+
+  const { viewMode, categoryFilter, locationFilter } = useFilterStore();
 
   const loadData = async (showLoader = true) => {
     if (showLoader) {
@@ -54,7 +54,7 @@ export function DashboardPage() {
   const handleIssueUpdate = (updatedIssue?: Issue) => {
     if (updatedIssue) {
       // Update the issue in the list without full reload
-      setIssues(prevIssues => 
+      setIssues(prevIssues =>
         prevIssues.map(issue => issue.id === updatedIssue.id ? updatedIssue : issue)
       );
     }
@@ -65,8 +65,8 @@ export function DashboardPage() {
   }, [currentPage]);
 
   useEffect(() => {
-    setCurrentPage(1); // Reset to page 1 when filters change
-    loadData();
+    setCurrentPage(1);
+    loadData(false);
   }, [categoryFilter, locationFilter]);
 
   if (isLoading) {
@@ -77,7 +77,13 @@ export function DashboardPage() {
     <div className="min-h-screen bg-linear-to-br from-background via-background to-muted/10">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-12 py-8 sm:py-12">
         {/* Hero Section */}
-        <div className="relative overflow-hidden rounded-3xl p-8 sm:p-10 lg:p-12 mb-8 shadow-2xl bg-linear-to-br from-primary via-primary to-primary/80 text-primary-foreground">
+        <div
+          className="relative overflow-hidden rounded-3xl p-8 sm:p-10 lg:p-12 mb-8 shadow-2xl text-primary-foreground bg-cover"
+        >
+          <div className='absolute w-full h-full left-0 top-0 flex justify-center z-1'>
+            <img src='/header.png' alt="Header Background" className="object-cover w-full h-full" />
+          </div>
+          <div className='absolute w-full h-full bg-black/40 z-2 top-0 left-0'></div>
           <div className="relative z-10">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-4 rounded-full bg-primary-foreground/20 backdrop-blur-sm border border-primary-foreground/30">
               <div className="w-2 h-2 rounded-full bg-primary-foreground animate-pulse"></div>
@@ -131,7 +137,7 @@ export function DashboardPage() {
 
             <div className="flex items-center gap-3 group">
               <div className="w-11 h-11 bg-purple-500/10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                <TrendingUp className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <RiLineChartLine className="w-5 h-5 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-foreground leading-none mb-1">{stats.inProgress}</p>
@@ -210,7 +216,7 @@ export function DashboardPage() {
                 } else {
                   pageNum = currentPage - 2 + i;
                 }
-                
+
                 return (
                   <Button
                     key={pageNum}

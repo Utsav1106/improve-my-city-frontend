@@ -5,6 +5,7 @@ export interface CreateIssueData {
     description: string
     category: string
     uploadUrls: string[]
+    priority: 'low' | 'medium' | 'high'
     location: {
         latitude: number
         longitude: number

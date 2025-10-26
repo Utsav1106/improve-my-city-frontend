@@ -31,7 +31,7 @@ class IssuesAPI {
     title: string,
     description: string,
     category: IssueCategory,
-    priority: 'Low' | 'Medium' | 'High',
+    priority: 'low' | 'medium' | 'high',
     location: { address: string; latitude: number; longitude: number },
     photos: string[],
     _userId: string,
@@ -41,6 +41,7 @@ class IssuesAPI {
       title,
       description,
       category,
+      priority,
       uploadUrls: photos,
       location
     });
@@ -178,7 +179,7 @@ class IssuesAPI {
       description: issue.description,
       category: issue.category,
       status: issue.status,
-      priority: issue.priority || 'Medium',
+      priority: issue.priority || 'medium',
       location: issue.location,
       photos: issue.uploadUrls || issue.photos || [],
       uploadUrls: issue.uploadUrls || issue.photos || [],

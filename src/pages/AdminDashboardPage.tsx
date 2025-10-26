@@ -11,7 +11,7 @@ import { Modal } from '../components/Modal';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Shield, ArrowUpDown, Camera, X, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { RiShieldCheckLine, RiArrowUpDownLine, RiCameraLine, RiCloseLine, RiCheckboxCircleFill, RiTimeLine, RiAlertLine } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 
 type SortField = 'title' | 'createdAt' | 'upvotes' | 'priority' | 'status';
@@ -68,9 +68,9 @@ export function AdminDashboardPage() {
       aValue = new Date(a.createdAt).getTime();
       bValue = new Date(b.createdAt).getTime();
     } else if (sortField === 'priority') {
-      const priorityOrder: Record<string, number> = { 'High': 3, 'Medium': 2, 'Low': 1 };
-      aValue = priorityOrder[a.priority || 'Medium'];
-      bValue = priorityOrder[b.priority || 'Medium'];
+      const priorityOrder: Record<string, number> = { 'high': 3, 'medium': 2, 'low': 1 };
+      aValue = priorityOrder[a.priority || 'medium'];
+      bValue = priorityOrder[b.priority || 'medium'];
     } else if (sortField === 'status') {
       const statusOrder: Record<string, number> = { 'open': 1, 'in_progress': 2, 'resolved': 3, 'closed': 4 };
       aValue = statusOrder[a.status];
@@ -164,7 +164,7 @@ export function AdminDashboardPage() {
     pending: issues.filter((i) => i.status === 'open').length,
     inProgress: issues.filter((i) => i.status === 'in_progress').length,
     resolved: issues.filter((i) => i.status === 'resolved').length,
-    high: issues.filter((i) => i.priority === 'High').length,
+    high: issues.filter((i) => i.priority === 'high').length,
   };
 
   if (isLoading) {
@@ -178,7 +178,7 @@ export function AdminDashboardPage() {
         <div className="relative overflow-hidden rounded-3xl p-8 sm:p-10 lg:p-12 mb-8 shadow-2xl bg-linear-to-br from-primary via-primary to-primary/80 text-primary-foreground">
           <div className="relative z-10">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-4 rounded-full bg-primary-foreground/20 backdrop-blur-sm border border-primary-foreground/30">
-              <Shield className="w-4 h-4" />
+              <RiShieldCheckLine className="w-4 h-4" />
               <span className="text-sm font-medium">Administrator</span>
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 tracking-tight">
@@ -209,7 +209,7 @@ export function AdminDashboardPage() {
 
             <div className="flex items-center gap-3 group">
               <div className="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                <Clock className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                <RiTimeLine className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-foreground leading-none mb-1">{stats.pending}</p>
@@ -219,7 +219,7 @@ export function AdminDashboardPage() {
 
             <div className="flex items-center gap-3 group">
               <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                <AlertCircle className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <RiAlertLine className="w-5 h-5 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-foreground leading-none mb-1">{stats.inProgress}</p>
@@ -229,7 +229,7 @@ export function AdminDashboardPage() {
 
             <div className="flex items-center gap-3 group">
               <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+                <RiCheckboxCircleFill className="w-5 h-5 text-green-600 dark:text-green-400" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-foreground leading-none mb-1">{stats.resolved}</p>
@@ -267,7 +267,7 @@ export function AdminDashboardPage() {
                       className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
                     >
                       Issue
-                      <ArrowUpDown className="w-4 h-4" />
+                      <RiArrowUpDownLine className="w-4 h-4" />
                     </button>
                   </th>
                   <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Reporter</th>
@@ -278,7 +278,7 @@ export function AdminDashboardPage() {
                       className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
                     >
                       Priority
-                      <ArrowUpDown className="w-4 h-4" />
+                      <RiArrowUpDownLine className="w-4 h-4" />
                     </button>
                   </th>
                   <th className="text-left p-4">
@@ -287,7 +287,7 @@ export function AdminDashboardPage() {
                       className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
                     >
                       Status
-                      <ArrowUpDown className="w-4 h-4" />
+                      <RiArrowUpDownLine className="w-4 h-4" />
                     </button>
                   </th>
                   <th className="text-left p-4">
@@ -296,7 +296,7 @@ export function AdminDashboardPage() {
                       className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
                     >
                       Upvotes
-                      <ArrowUpDown className="w-4 h-4" />
+                      <RiArrowUpDownLine className="w-4 h-4" />
                     </button>
                   </th>
                   <th className="text-right p-4 text-sm font-semibold text-muted-foreground">Actions</th>
@@ -323,7 +323,7 @@ export function AdminDashboardPage() {
                       <span className="text-sm px-2.5 py-1 rounded-full bg-primary/10 text-primary">{issue.category}</span>
                     </td>
                     <td className="p-4">
-                      <PriorityBadge priority={issue.priority || 'Medium'} />
+                      <PriorityBadge priority={issue.priority || 'medium'} />
                     </td>
                     <td className="p-4">
                       <StatusBadge status={issue.status} />
@@ -368,7 +368,7 @@ export function AdminDashboardPage() {
                 <h2 className="text-2xl font-bold mb-2">{selectedIssue.title}</h2>
                 <div className="flex gap-2 flex-wrap mb-4">
                   <StatusBadge status={selectedIssue.status} />
-                  <PriorityBadge priority={selectedIssue.priority || 'Medium'} />
+                  <PriorityBadge priority={selectedIssue.priority || 'medium'} />
                 </div>
               </div>
 
@@ -423,7 +423,7 @@ export function AdminDashboardPage() {
                       onClick={() => setShowResolveModal(true)}
                       className="flex-1 bg-green-600 hover:bg-green-700"
                     >
-                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      <RiCheckboxCircleFill className="w-4 h-4 mr-2" />
                       Mark Resolved
                     </Button>
                   )}
@@ -437,7 +437,7 @@ export function AdminDashboardPage() {
               ) : (
                 <div className="space-y-4 p-6 bg-muted/30 rounded-xl">
                   <h3 className="font-semibold text-lg flex items-center gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-green-600" />
+                    <RiCheckboxCircleFill className="w-5 h-5 text-green-600" />
                     Resolution Details
                   </h3>
 
@@ -460,7 +460,7 @@ export function AdminDashboardPage() {
                         htmlFor="resolutionImages"
                         className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-border rounded-xl hover:border-primary cursor-pointer transition-colors"
                       >
-                        <Camera className="w-5 h-5" />
+                        <RiCameraLine className="w-5 h-5" />
                         <span className="text-sm font-medium">Upload Resolution Photos</span>
                       </label>
                       <Input
@@ -486,7 +486,7 @@ export function AdminDashboardPage() {
                               onClick={() => removeImage(idx)}
                               className="absolute top-2 right-2 p-1.5 bg-red-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                             >
-                              <X className="w-4 h-4 text-white" />
+                              <RiCloseLine className="w-4 h-4 text-white" />
                             </button>
                           </div>
                         ))}
@@ -500,7 +500,7 @@ export function AdminDashboardPage() {
                       disabled={!resolutionMessage.trim() || isUpdating}
                       className="flex-1 bg-green-600 hover:bg-green-700"
                     >
-                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      <RiCheckboxCircleFill className="w-4 h-4 mr-2" />
                       {isUpdating ? 'Resolving...' : 'Confirm Resolution'}
                     </Button>
                     <Button

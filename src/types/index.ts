@@ -17,7 +17,7 @@ export interface Issue {
   description: string;
   category: IssueCategory | string;
   status: IssueStatus;
-  priority?: 'Low' | 'Medium' | 'High';
+  priority?: 'low' | 'medium' | 'high';
   location: {
     address: string;
     latitude: number;
@@ -50,24 +50,22 @@ export interface Comment {
   createdAt: string | number;
 }
 
-export interface Notification {
-  id: string;
+export interface LeaderboardEntry {
   userId: string;
-  issueId: string;
-  title: string;
-  message: string;
-  read: boolean;
-  createdAt: string;
+  name: string;
+  email: string;
+  totalIssues: number;
+  resolvedIssues: number;
+  openIssues: number;
+  inProgressIssues: number;
+  totalUpvotes: number;
+  score: number;
+  rank?: number;
+  badges: string[];
+  avatar: string;
 }
 
-export interface IssueFilters {
-  status?: IssueStatus;
-  category?: IssueCategory | string;
-  priority?: 'Low' | 'Medium' | 'High';
-  searchQuery?: string;
-  userId?: string;
-  latitude?: number;
-  longitude?: number;
-  radiusKm?: number;
+export interface LeaderboardResponse {
+  leaderboard: LeaderboardEntry[];
+  totalUsers: number;
 }
-

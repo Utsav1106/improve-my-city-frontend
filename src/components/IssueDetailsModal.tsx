@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Modal } from './Modal';
 import { useAuth } from '../providers/AuthProvider';
 import { issuesAPI } from '../api/issues';
-import { Loader2, Camera, X } from 'lucide-react';
+import { RiLoader4Line, RiCameraLine, RiCloseLine } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 import * as issuesService from '../services/issues';
+import { Input } from './ui/input';
 
 interface IssueDetailsModalProps {
   issue: Issue;
@@ -150,7 +151,7 @@ export function IssueDetailsModal({ issue, isOpen, onClose, onUpdate }: IssueDet
 
         <div className="flex gap-3 flex-wrap">
           <StatusBadge status={localIssue.status} />
-          <PriorityBadge priority={localIssue.priority || 'Medium'} />
+          <PriorityBadge priority={localIssue.priority || 'medium'} />
           <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-primary/10 text-primary">
             {localIssue.category}
           </span>
@@ -195,7 +196,7 @@ export function IssueDetailsModal({ issue, isOpen, onClose, onUpdate }: IssueDet
           <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
             {isLoadingComments ? (
               <div className="text-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+                <RiLoader4Line className="h-6 w-6 animate-spin mx-auto text-primary" />
               </div>
             ) : (
               <>
@@ -283,19 +284,19 @@ export function IssueDetailsModal({ issue, isOpen, onClose, onUpdate }: IssueDet
                         onClick={() => removeCommentImage(idx)}
                         className="absolute top-1 right-1 p-1 bg-red-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        <X className="w-3 h-3 text-white" />
+                        <RiCloseLine className="w-3 h-3 text-white" />
                       </button>
                     </div>
                   ))}
                 </div>
               )}
               <div className="flex gap-2">
-                <input
+                <Input
                   type="text"
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="Add a comment..."
-                  className="flex-1 px-4 py-2 rounded-lg border border-input bg-background text-foreground outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring"
+                  className="flex-1 px-4 py-2 rounded-lg border border-input bg-background text-foreground"
                   onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleComment()}
                 />
                 <label className="cursor-pointer">
@@ -308,12 +309,12 @@ export function IssueDetailsModal({ issue, isOpen, onClose, onUpdate }: IssueDet
                   />
                   <Button type="button" variant="outline" size="icon" asChild>
                     <span>
-                      <Camera className="h-4 w-4" />
+                      <RiCameraLine className="h-4 w-4" />
                     </span>
                   </Button>
                 </label>
                 <Button onClick={handleComment} disabled={!comment.trim() || isCommenting}>
-                  {isCommenting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Post'}
+                  {isCommenting ? <RiLoader4Line className="h-4 w-4 animate-spin" /> : 'Post'}
                 </Button>
               </div>
             </div>

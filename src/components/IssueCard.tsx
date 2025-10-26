@@ -6,7 +6,7 @@ import { IssueDetailsModal } from './IssueDetailsModal';
 import { useAuth } from '../providers/AuthProvider';
 import { issuesAPI } from '../api/issues';
 import * as issuesService from '../services/issues';
-import { Loader2 } from 'lucide-react';
+import { RiLoader4Line } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 
 interface IssueCardProps {
@@ -21,10 +21,10 @@ export function IssueCard({ issue, onUpdate, showActions = true }: IssueCardProp
   const [isUpvoting, setIsUpvoting] = useState(false);
   const [localIssue, setLocalIssue] = useState<Issue>(issue);
   const [commentCount, setCommentCount] = useState(0);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const isUpvoted = user ? (localIssue.upvotedBy || []).includes(user.id) : false;
 
-  // Fetch comment count on mount
   useEffect(() => {
     const fetchCommentCount = async () => {
       try {
@@ -85,6 +85,20 @@ export function IssueCard({ issue, onUpdate, showActions = true }: IssueCardProp
     return date.toLocaleDateString();
   };
 
+  const handlePrevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => 
+      prev === 0 ? (localIssue.photos?.length || 1) - 1 : prev - 1
+    );
+  };
+
+  const handleNextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => 
+      prev === (localIssue.photos?.length || 1) - 1 ? 0 : prev + 1
+    );
+  };
+
   return (
     <>
       <div className="group relative bg-linear-to-br from-card/80 to-card/40 backdrop-blur-sm rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-1">
@@ -92,13 +106,62 @@ export function IssueCard({ issue, onUpdate, showActions = true }: IssueCardProp
           <div className="relative h-48 overflow-hidden">
             <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent z-10" />
             <img
-              src={localIssue.photos[0]}
-              alt={localIssue.title}
+              src={localIssue.photos[currentImageIndex]}
+              alt={`${localIssue.title} - Image ${currentImageIndex + 1}`}
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
             />
+            
+            {/* Navigation buttons - only show if multiple images */}
+            {localIssue.photos.length > 1 && (
+              <>
+                <button
+                  onClick={handlePrevImage}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100"
+                  aria-label="Previous image"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={handleNextImage}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100"
+                  aria-label="Next image"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+                
+                {/* Image indicators */}
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
+                  {localIssue.photos.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentImageIndex(index);
+                      }}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        index === currentImageIndex 
+                          ? 'bg-white w-6' 
+                          : 'bg-white/50 hover:bg-white/75'
+                      }`}
+                      aria-label={`Go to image ${index + 1}`}
+                    />
+                  ))}
+                </div>
+                
+                {/* Image counter */}
+                <div className="absolute bottom-3 right-3 z-20 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
+                  {currentImageIndex + 1} / {localIssue.photos.length}
+                </div>
+              </>
+            )}
+            
             <div className="absolute top-4 right-4 z-20 flex gap-2">
               <StatusBadge status={localIssue.status} />
-              <PriorityBadge priority={localIssue.priority || 'Medium'} />
+              <PriorityBadge priority={localIssue.priority || 'medium'} />
             </div>
           </div>
         )}
@@ -107,7 +170,7 @@ export function IssueCard({ issue, onUpdate, showActions = true }: IssueCardProp
           {(!localIssue.photos || localIssue.photos.length === 0) && (
             <div className="flex gap-2 mb-3">
               <StatusBadge status={localIssue.status} />
-              <PriorityBadge priority={localIssue.priority || 'Medium'} />
+              <PriorityBadge priority={localIssue.priority || 'medium'} />
             </div>
           )}
 
@@ -166,7 +229,7 @@ export function IssueCard({ issue, onUpdate, showActions = true }: IssueCardProp
                   className="flex-1"
                 >
                   {isUpvoting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <RiLoader4Line className="h-4 w-4 animate-spin" />
                   ) : (
                     <>
                       <svg className="w-4 h-4 mr-1.5" fill={isUpvoted ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">

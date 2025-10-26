@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import { IssueDetailsModal } from './IssueDetailsModal';
 import { useAuth } from '../providers/AuthProvider';
 import { issuesAPI } from '../api/issues';
-import { Loader2 } from 'lucide-react';
+import { RiLoader4Line } from 'react-icons/ri';
 import toast from 'react-hot-toast';
 
 interface IssueTableViewProps {
   issues: Issue[];
-  onUpdate?: () => void;
+  onUpdate?: (updatedIssue?: Issue) => void;
 }
 
 export function IssueTableView({ issues, onUpdate }: IssueTableViewProps) {
@@ -21,20 +21,30 @@ export function IssueTableView({ issues, onUpdate }: IssueTableViewProps) {
   const handleUpvote = async (issue: Issue) => {
     if (!user) return;
     setIsUpvoting(issue.id);
-    
+
+    // Optimistic update
     const wasUpvoted = (issue.upvotedBy || []).includes(user.id);
-    
+    const updatedIssue = {
+      ...issue,
+      upvotes: wasUpvoted ? (issue.upvotes || 1) - 1 : (issue.upvotes || 0) + 1,
+      upvotedBy: wasUpvoted
+        ? (issue.upvotedBy || []).filter(id => id !== user.id)
+        : [...(issue.upvotedBy || []), user.id]
+    };
+
     try {
       await issuesAPI.upvoteIssue(issue.id, user.id);
       toast.success(wasUpvoted ? 'Upvote removed' : 'Issue upvoted!');
-      onUpdate?.();
+      onUpdate?.(updatedIssue);
     } catch (error) {
       console.error('Failed to upvote:', error);
       toast.error('Failed to upvote issue');
+      // Revert on error
     } finally {
       setIsUpvoting(null);
     }
   };
+
 
   const formatDate = (dateString: string | number) => {
     const date = new Date(dateString);
@@ -42,6 +52,41 @@ export function IssueTableView({ issues, onUpdate }: IssueTableViewProps) {
   };
 
   const isUpvoted = (issue: Issue) => user ? (issue.upvotedBy || []).includes(user.id) : false;
+
+  // If there are no issues, show an empty state and do not render the table header
+  if (issues.length === 0) {
+    return (
+      <>
+        <div className="bg-card/50 backdrop-blur-sm rounded-2xl overflow-hidden">
+          <div className="text-center py-16 px-6">
+            <div className="max-w-md mx-auto">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted/50 flex items-center justify-center">
+                <svg className="w-10 h-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold mb-2">There are no issues</h3>
+              <p className="text-muted-foreground text-sm">
+                Try adjusting your filters or check back later
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {selectedIssue && (
+          <IssueDetailsModal
+            issue={selectedIssue}
+            isOpen={!!selectedIssue}
+            onClose={() => setSelectedIssue(null)}
+            onUpdate={() => {
+              setSelectedIssue(null);
+              onUpdate?.();
+            }}
+          />
+        )}
+      </>
+    );
+  }
 
   return (
     <>
@@ -63,8 +108,8 @@ export function IssueTableView({ issues, onUpdate }: IssueTableViewProps) {
             </thead>
             <tbody>
               {issues.map((issue) => (
-                <tr 
-                  key={issue.id} 
+                <tr
+                  key={issue.id}
                   className="border-b border-border/30 hover:bg-muted/20 transition-colors group"
                 >
                   <td className="p-4">
@@ -95,7 +140,7 @@ export function IssueTableView({ issues, onUpdate }: IssueTableViewProps) {
                     <StatusBadge status={issue.status} />
                   </td>
                   <td className="p-4">
-                    <PriorityBadge priority={issue.priority || 'Medium'} />
+                    <PriorityBadge priority={issue.priority || 'medium'} />
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground max-w-[200px]">
@@ -121,7 +166,7 @@ export function IssueTableView({ issues, onUpdate }: IssueTableViewProps) {
                       className="min-w-[60px]"
                     >
                       {isUpvoting === issue.id ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <RiLoader4Line className="h-3.5 w-3.5 animate-spin" />
                       ) : (
                         <>
                           <svg className="w-3.5 h-3.5 mr-1" fill={isUpvoted(issue) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
@@ -152,22 +197,6 @@ export function IssueTableView({ issues, onUpdate }: IssueTableViewProps) {
             </tbody>
           </table>
         </div>
-
-        {issues.length === 0 && (
-          <div className="text-center py-16 px-6">
-            <div className="max-w-md mx-auto">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted/50 flex items-center justify-center">
-                <svg className="w-10 h-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold mb-2">No issues found</h3>
-              <p className="text-muted-foreground text-sm">
-                Try adjusting your filters or search criteria
-              </p>
-            </div>
-          </div>
-        )}
       </div>
 
       {selectedIssue && (
