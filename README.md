@@ -107,19 +107,6 @@ npm run build
 - **Sorting & Filtering**: Sort by title, date, upvotes, priority, or status
 - **Admin Controls**: Full control over issue lifecycle
 
-### Login Page
-
-![Login Page](./screenshots/login.png)
-
-- **User Authentication**: Secure login with email and password
-- **Registration Link**: Quick access to create a new account
-
-### Register Page
-
-![Register Page](./screenshots/register.png)
-
-- **New Account Creation**: Sign up with name, email, and password
-
 ### AI Chatbot (Civica)
 
 <div align="center">
@@ -134,6 +121,19 @@ npm run build
 - **Issue Reporting**: Report new issues directly through chat conversation
 - **Conversation History**: Maintains chat history for seamless experience
 - **24/7 Availability**: Always ready to assist with civic reporting
+
+### Login Page
+
+![Login Page](./screenshots/login.png)
+
+- **User Authentication**: Secure login with email and password
+- **Registration Link**: Quick access to create a new account
+
+### Register Page
+
+![Register Page](./screenshots/register.png)
+
+- **New Account Creation**: Sign up with name, email, and password
 
 ### Admin Dashboard Page
 - **Issue Management**: View and manage all reported issues (admin only)
