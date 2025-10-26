@@ -11,7 +11,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RiLineChartLine } from 'react-icons/ri';
 
-export function DashboardPage() {
+export function HomePage() {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [stats, setStats] = useState({ total: 0, pending: 0, inProgress: 0, resolved: 0, closed: 0 });
   const [isLoading, setIsLoading] = useState(true);

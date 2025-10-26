@@ -4,7 +4,7 @@ import { Navigation } from './components/Navigation';
 import { Chatbot } from './components/Chatbot';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
-import { DashboardPage } from './pages/DashboardPage';
+import { HomePage } from './pages/HomePage';
 import { ReportIssuePage } from './pages/ReportIssuePage';
 import { MyIssuesPage } from './pages/MyIssuesPage';
 import { ResolvedIssuesPage } from './pages/ResolvedIssuesPage';
@@ -34,7 +34,7 @@ function AppRoutes() {
         <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage />} />
         <Route path="/register" element={user ? <Navigate to="/" replace /> : <RegisterPage />} />
 
-        <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+        <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
         <Route path="/report" element={<ProtectedRoute><ReportIssuePage /></ProtectedRoute>} />
         <Route path="/my-issues" element={<ProtectedRoute><MyIssuesPage /></ProtectedRoute>} />
         <Route path="/resolved" element={<ProtectedRoute><ResolvedIssuesPage /></ProtectedRoute>} />
