@@ -120,6 +120,21 @@ npm run build
 
 - **New Account Creation**: Sign up with name, email, and password
 
+### AI Chatbot (Civica)
+
+<div align="center">
+  <img src="./public/civica.png" alt="Civica AI Assistant" width="120" height="120" style="border-radius: 50%;" />
+</div>
+
+![Chatbot Interface](./screenshots/chatbot.png)
+
+- **Smart Assistant**: AI-powered chatbot to help using the platform
+- **Natural Conversations**: Ask questions in plain language about your issues
+- **Quick Actions**: Check your reported issues, view community problems
+- **Issue Reporting**: Report new issues directly through chat conversation
+- **Conversation History**: Maintains chat history for seamless experience
+- **24/7 Availability**: Always ready to assist with civic reporting
+
 ### Admin Dashboard Page
 - **Issue Management**: View and manage all reported issues (admin only)
 - **Status Updates**: Change issue status (Pending, In Progress, Resolved, Closed)
