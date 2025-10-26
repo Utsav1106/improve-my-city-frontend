@@ -22,8 +22,12 @@ export function IssueCard({ issue, onUpdate, showActions = true }: IssueCardProp
   const [localIssue, setLocalIssue] = useState<Issue>(issue);
   const [commentCount, setCommentCount] = useState(0);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [imageError, setImageError] = useState(false);
 
   const isUpvoted = user ? (localIssue.upvotedBy || []).includes(user.id) : false;
+  
+  // Fallback image placeholder
+  const fallbackImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23f0f0f0'/%3E%3Cg fill='%23999'%3E%3Cpath d='M150 120l-30 40h160l-50-60-30 35z'/%3E%3Ccircle cx='140' cy='100' r='15'/%3E%3C/g%3E%3Ctext x='200' y='200' font-family='Arial' font-size='16' fill='%23666' text-anchor='middle'%3EImage not available%3C/text%3E%3C/svg%3E";
 
   useEffect(() => {
     const fetchCommentCount = async () => {
@@ -36,6 +40,11 @@ export function IssueCard({ issue, onUpdate, showActions = true }: IssueCardProp
     };
     fetchCommentCount();
   }, [issue.id]);
+
+  // Reset image error when image index changes
+  useEffect(() => {
+    setImageError(false);
+  }, [currentImageIndex]);
 
   const handleUpvote = async () => {
     if (!user) return;
@@ -103,12 +112,14 @@ export function IssueCard({ issue, onUpdate, showActions = true }: IssueCardProp
     <>
       <div className="group relative bg-linear-to-br from-card/80 to-card/40 backdrop-blur-sm rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-1">
         {localIssue.photos && localIssue.photos.length > 0 && (
-          <div className="relative h-48 overflow-hidden">
+          <div className="relative h-48 overflow-hidden bg-muted/30">
             <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent z-10" />
             <img
-              src={localIssue.photos[currentImageIndex]}
+              src={imageError ? fallbackImage : localIssue.photos[currentImageIndex]}
               alt={`${localIssue.title} - Image ${currentImageIndex + 1}`}
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+              onError={() => setImageError(true)}
+              loading="lazy"
             />
             
             {/* Navigation buttons - only show if multiple images */}

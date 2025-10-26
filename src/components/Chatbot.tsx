@@ -40,7 +40,7 @@ export function Chatbot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Hi! I'm your city assistant. I can help you check your issues, view community problems, or report a new issue. How can I help you?",
+      text: "Hi! I'm Civica, your city assistant. I can help you check your issues, view community problems, or report a new issue. How can I help you?",
       isBot: true,
       timestamp: new Date(),
     },
@@ -125,7 +125,7 @@ export function Chatbot() {
     setMessages([
       {
         id: '1',
-        text: "Hi! I'm your city assistant. I can help you check your issues, view community problems, or report a new issue. How can I help you?",
+        text: "Hi! I'm Civica, your city assistant. I can help you check your issues, view community problems, or report a new issue. How can I help you?",
         isBot: true,
         timestamp: new Date(),
       },
@@ -420,23 +420,18 @@ export function Chatbot() {
           <div className="relative bg-linear-to-r from-primary to-primary/90 text-primary-foreground px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-3">
               <div className="relative">
-                <div className="w-10 h-10 sm:w-11 sm:h-11 bg-primary-foreground/20 backdrop-blur-sm rounded-full flex items-center justify-center ring-2 ring-primary-foreground/30">
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" 
-                    />
-                  </svg>
-                </div>
+                <img 
+                  src="/civica.png" 
+                  alt="Civica" 
+                  className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover ring-2 ring-primary-foreground/30"
+                />
                 <div className="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-400 rounded-full border-2 border-primary" />
               </div>
               <div>
-                <h3 className="font-semibold text-sm sm:text-base">City Assistant</h3>
+                <h3 className="font-semibold text-sm sm:text-base">Civica</h3>
                 <div className="flex items-center space-x-1">
                   <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full animate-pulse" />
-                  <p className="text-xs text-primary-foreground/90">Online</p>
+                  <p className="text-xs text-primary-foreground/90">Smart help for a better city</p>
                 </div>
               </div>
             </div>
@@ -473,11 +468,11 @@ export function Chatbot() {
               >
                 <div className={`flex items-end space-x-2 max-w-[85%] sm:max-w-[80%] ${message.isBot ? '' : 'flex-row-reverse space-x-reverse'}`}>
                   {message.isBot && (
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mb-1">
-                      <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                      </svg>
-                    </div>
+                    <img 
+                      src="/civica.png" 
+                      alt="Civica" 
+                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover shrink-0 mb-1"
+                    />
                   )}
                   <div>
                     <div
@@ -530,11 +525,11 @@ export function Chatbot() {
             {isTyping && (
               <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="flex items-end space-x-2">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mb-1">
-                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                    </svg>
-                  </div>
+                  <img 
+                    src="/civica.png" 
+                    alt="Civica" 
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover shrink-0 mb-1"
+                  />
                   <div className="bg-card text-card-foreground rounded-2xl rounded-tl-sm px-4 sm:px-5 py-2.5 sm:py-3 shadow-sm">
                     <div className="flex space-x-1.5">
                       <div className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" />
