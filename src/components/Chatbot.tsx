@@ -47,6 +47,7 @@ export function Chatbot() {
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Issue creation state
   const [creationStep, setCreationStep] = useState<IssueCreationStep>('idle');
@@ -300,9 +301,12 @@ export function Chatbot() {
   };
 
   const submitIssue = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       if (!issueData.title || !issueData.description || !issueData.category || !issueData.location) {
         toast.error("Please fill in all required fields");
+        setIsSubmitting(false);
         return;
       }
 
@@ -336,6 +340,8 @@ export function Chatbot() {
       console.error('Failed to create issue:', error);
       addMessage("Sorry, there was an error submitting your issue. Please try again later.", true);
       toast.error(`Failed to submit issue: ${error instanceof Error ? error.message : 'Please try again later.'}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -759,9 +765,9 @@ export function Chatbot() {
                 <Button
                   onClick={submitIssue}
                   className="w-full h-9 text-sm"
-                  disabled={!issueData.title || !issueData.description || !issueData.category || !issueData.location}
+                  disabled={isSubmitting || !issueData.title || !issueData.description || !issueData.category || !issueData.location}
                 >
-                  Submit Issue
+                  {isSubmitting ? 'Submitting…' : 'Submit Issue'}
                 </Button>
               </div>
             )}
