@@ -155,7 +155,7 @@ export function Navigation() {
                     <div className="relative">
                       <img
                         src={
-                          `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name || 'user')}`
+                          `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(user?.name || 'user')}&mouth[]=smile&eyes[0]=happy`
                         }
                         alt={user.name || 'User avatar'}
                         className="h-9 w-9 rounded-full ring-2 ring-border transition-all hover:ring-primary/50"
@@ -219,7 +219,7 @@ export function Navigation() {
                 <div className="flex items-center gap-3">
                   <img
                     src={
-                      `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name || 'user')}`
+                      `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(user?.name || 'user')}&mouth[]=smile&eyes[0]=happy`
                     }
                     alt={user.name || 'User avatar'}
                     className="h-10 w-10 rounded-full ring-2 ring-border"

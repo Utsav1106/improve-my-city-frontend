@@ -135,22 +135,6 @@ npm run build
 
 - **New Account Creation**: Sign up with name, email, and password
 
-### Admin Dashboard Page
-- **Issue Management**: View and manage all reported issues (admin only)
-- **Status Updates**: Change issue status (Pending, In Progress, Resolved, Closed)
-- **Priority Assignment**: Set priority levels (Low, Medium, High, Critical)
-- **Issue Resolution**: Add resolution messages and upload resolution images
-- **Sorting & Filtering**: Sort by title, date, upvotes, priority, or status
-- **Admin Controls**: Full control over issue lifecycle
-- **Email Notifications**: Auto Notify users upon status changes
-
-### Login Page
-- **User Authentication**: Secure login with email and password
-- **Registration Link**: Quick access to create a new account
-
-### Register Page
-- **New Account Creation**: Sign up with name, email, and password
-
 ## Tech Stack
 
 - React 19
