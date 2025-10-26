@@ -161,7 +161,7 @@ export function ReportIssuePage() {
       navigate("/my-issues");
     } catch (error) {
       console.error("Failed to create issue:", error);
-      toast.error("Failed to submit issue. Please try again.");
+      toast.error(`Failed to create issue: ${error instanceof Error ? error.message : 'Please try again later.'}`);
     } finally {
       setIsSubmitting(false);
     }

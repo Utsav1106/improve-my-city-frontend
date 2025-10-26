@@ -104,7 +104,7 @@ export function IssueDetailsModal({ issue, isOpen, onClose, onUpdate }: IssueDet
       onUpdate?.();
     } catch (error) {
       console.error('Failed to add comment:', error);
-      toast.error('Failed to add comment');
+      toast.error(`Failed to add comment: ${error instanceof Error ? error.message : ''}`);
     } finally {
       setIsCommenting(false);
     }

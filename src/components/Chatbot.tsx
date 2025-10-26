@@ -335,7 +335,7 @@ export function Chatbot() {
     } catch (error) {
       console.error('Failed to create issue:', error);
       addMessage("Sorry, there was an error submitting your issue. Please try again later.", true);
-      toast.error('Failed to submit issue');
+      toast.error(`Failed to submit issue: ${error instanceof Error ? error.message : 'Please try again later.'}`);
     }
   };
 

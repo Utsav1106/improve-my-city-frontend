@@ -136,7 +136,7 @@ export function AdminDashboardPage() {
       toast.success('Issue resolved successfully');
     } catch (error) {
       console.error('Failed to resolve issue:', error);
-      toast.error('Failed to resolve issue');
+      toast.error(`Failed to resolve issue: ${error instanceof Error ? error.message : ''}`);
     } finally {
       setIsUpdating(false);
     }

@@ -38,7 +38,7 @@ export function IssueTableView({ issues, onUpdate }: IssueTableViewProps) {
       onUpdate?.(updatedIssue);
     } catch (error) {
       console.error('Failed to upvote:', error);
-      toast.error('Failed to upvote issue');
+      toast.error(`Failed to upvote issue: ${error instanceof Error ? error.message : ''}`);
       // Revert on error
     } finally {
       setIsUpvoting(null);

@@ -78,7 +78,7 @@ export function MyIssuesPage() {
       toast.success('Issue deleted successfully');
     } catch (error) {
       console.error('Failed to delete issue:', error);
-      toast.error('Failed to delete issue');
+      toast.error(`Failed to delete issue: ${error instanceof Error ? error.message : ''}`);
     }
   };
 
